@@ -1,65 +1,40 @@
-@import '../assets/fonts.css';
-
-:root {
-	--dark-brown: #4f311a;
-	--light-brown: #e4d7c2;
+.home {
+	justify-content: center;
+	align-items: center;
+	text-align: center;
+	padding-bottom: 6rem;
 }
 
-.container {
-	min-width: 10rem;
-	padding: 10rem 0 0 0;
+.home__logo {
+	width: 11rem;
+	margin-bottom: 2rem;
+	filter: drop-shadow(0 8px 16px rgba(79, 49, 26, 0.18));
+}
 
+.home__headline {
+	margin: 0;
+	font-size: 1.7rem;
+	font-weight: 800;
+	letter-spacing: -0.03em;
+	line-height: 1.35;
+}
+
+.home__headline em {
+	font-style: normal;
+	color: var(--crust);
+}
+
+.home__sub {
+	margin: .9rem 0 2.2rem;
+	font-size: .95rem;
+	line-height: 1.6;
+	color: var(--brown-500);
+}
+
+.home__actions {
+	width: 100%;
+	max-width: 17rem;
 	display: flex;
 	flex-direction: column;
-	align-items: center;
-}
-
-/* input 에 화살표 지우기 */
-.container input::-webkit-inner-spin-button {
-	appearance: none; 
-}
-
-.container option, input, select, button {
-	padding: 0;
-	margin: 0;
-	border: none;
-	background-color: rgba(0, 0, 0, 0);
-	width: 100%;
-	height: 100%;
-	outline: none;
-}
-
-.bodyText {
-	padding: .5rem 0;
-	color: var(--dark-brown);
-	text-align: center;
-	font-family: 'Nanum Myeongjo';
-	font-size: 1rem;
-	line-height: 1.5em;
-}
-
-.logoImage {
-	max-width: 15rem;
-	margin: 5rem 0rem 2rem 0rem;
-}
-
-.navButton {
-	width: 14em;
-	padding: .8rem 2rem;
-	margin: 2rem;
-	
-	display: flex;
-	justify-content: space-around;
-
-	background-color: white;
-	border: .4rem solid var(--dark-brown);
-	box-shadow: 8px 8px 0px 0 var(--dark-brown);
-}
-
-.navButton__link {
-	color: var(--dark-brown);
-	font-size: 1.2em;
-	font-family: "Do Hyeon";
-	text-align: center;
-	text-decoration: none;
+	gap: .7rem;
 }

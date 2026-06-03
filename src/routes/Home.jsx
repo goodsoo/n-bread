@@ -4,15 +4,21 @@ import logo from '../images/logo.png';
 
 function Home() {
 	return (
-		<div className="container">
-			<img className="logoImage" src={logo} alt="빵" />
-			<div className="bodyText">여러 명이 결제해도<br />
-				<b>한 번의 송금</b>으로 정산을 완료하세요.</div>
-			<div className="navButton">
-				<Link className="navButton__link" to="/calculation">
+		<div className="page home">
+			<img className="home__logo" src={logo} alt="N빵" />
+			<h1 className="home__headline">
+				여러 명이 결제해도<br />
+				<em>한 번의 송금</em>으로
+			</h1>
+			<p className="home__sub">
+				누가 누구에게 얼마를 보내야 하는지,<br />
+				가장 적은 송금 횟수로 계산해 드려요.
+			</p>
+			<div className="home__actions">
+				<Link className="btn btn--primary" to="/calculation">
 					N빵하기
 				</Link>
-				<Link className="navButton__link" to="/about">
+				<Link className="btn btn--ghost" to="/about">
 					만든이
 				</Link>
 			</div>
