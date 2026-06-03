@@ -41,7 +41,14 @@
 	font-size: .95rem;
 }
 
-/* ── 정산 내역 ───────────────────────────────── */
+.roundingNote {
+	margin: .2rem .2rem .8rem;
+	font-size: .78rem;
+	line-height: 1.5;
+	color: var(--brown-500);
+}
+
+/* ── 각자 부담 정리 ──────────────────────────── */
 
 .balanceCard {
 	padding: .4rem 1.1rem;

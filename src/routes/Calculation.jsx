@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Calculation.css';
 import logo from '../images/logo_before.png';
 import { MAX_PEOPLE } from '../lib/settle.js';
-import { encodeData, loadDraft, saveDraft } from '../lib/share.js';
+import { encodeData, isSessionActive, loadDraft, saveDraft } from '../lib/share.js';
 
 const MIN_PEOPLE = 2;
 
@@ -18,70 +18,116 @@ const newPayment = (pid, number) => ({
 const withPids = (payments) =>
 	payments.map((payment, i) => ({ ...payment, pid: i }));
 
+/* 복원을 권할 만큼 내용이 있는 draft 인가 */
+const hasContent = (draft) =>
+	draft !== null && (
+		draft.names.some((name) => name !== '')
+		|| draft.payments.some((payment) => Number(payment.money) > 0)
+		|| draft.names.length > MIN_PEOPLE
+		|| draft.payments.length > 1
+	);
+
 function Calculation() {
 	const navigate = useNavigate();
-	const draft = useRef(loadDraft()).current;
 
-	const [names, setNames] = useState(draft ? draft.names : ['', '']);
-	const [payments, setPayments] = useState(draft
-		? withPids(draft.payments)
-		: [newPayment(0, MIN_PEOPLE)]);
-	const [errorMsg, setErrorMsg] = useState('');
+	/* 같은 세션의 새로고침이면 조용히 복원하고,
+		 새 방문에 지난 정산이 남아 있으면 깨끗하게 시작 + 배너로 제안만 한다 */
+	const [init] = useState(() => {
+		const draft = loadDraft();
+		if (draft && isSessionActive())
+			return { names: draft.names, payments: withPids(draft.payments), pending: null };
+		return {
+			names: ['', ''],
+			payments: [newPayment(0, MIN_PEOPLE)],
+			pending: hasContent(draft) ? draft : null,
+		};
+	});
+	const [pendingDraft, setPendingDraft] = useState(init.pending);
+	const [names, setNames] = useState(init.names);
+	const [payments, setPayments] = useState(init.payments);
+	const [peopleMsg, setPeopleMsg] = useState('');
+	const [submitMsg, setSubmitMsg] = useState('');
 
 	const number = names.length;
 
-	/* 새로고침해도 입력이 날아가지 않도록 draft 를 보존한다 */
+	/* 새로고침해도 입력이 날아가지 않도록 draft 를 보존한다.
+		 단, 복원 배너가 떠 있는 동안은 지난 draft 를 덮어쓰지 않는다. */
 	useEffect(() => {
+		if (pendingDraft)
+			return;
 		saveDraft({
 			names,
 			payments: payments.map(({ payer, money, joins }) => ({ payer, money, joins })),
 		});
-	}, [names, payments]);
+	}, [names, payments, pendingDraft]);
+
+	/* 배너를 둔 채 입력을 시작하면 "새로 시작" 을 고른 것으로 본다 */
+	const touch = () => {
+		if (pendingDraft)
+			setPendingDraft(null);
+	};
+
+	const handleRestoreDraft = () => {
+		setNames(pendingDraft.names);
+		setPayments(withPids(pendingDraft.payments));
+		setPendingDraft(null);
+	};
+
+	const handleDismissDraft = () => {
+		setPendingDraft(null);
+	};
 
 	const handleAddPerson = () => {
 		if (number >= MAX_PEOPLE) {
-			setErrorMsg(`죄송해요, ${MAX_PEOPLE}명까지만 지원해요.`);
+			setPeopleMsg(`죄송해요, ${MAX_PEOPLE}명까지만 지원해요.`);
 			return;
 		}
 		setNames([...names, '']);
 		setPayments(payments.map((payment) =>
 			({ ...payment, joins: [...payment.joins, true] })));
-		setErrorMsg('');
+		setPeopleMsg('');
+		touch();
 	};
 
-	const handleRemovePerson = () => {
+	const handleRemovePerson = (id) => {
 		if (number <= MIN_PEOPLE) {
-			setErrorMsg('혼자서 정산을..?');
+			setPeopleMsg('혼자서 정산을..?');
 			return;
 		}
-		const removed = number - 1;
-		setNames(names.slice(0, removed));
+		setNames(names.filter((_, i) => i !== id));
 		setPayments(payments.map((payment) => {
-			const joins = payment.joins.slice(0, removed);
+			const joins = payment.joins.filter((_, i) => i !== id);
 			/* 적어도 한 명은 N빵 대상이어야 한다 */
 			if (!joins.some(Boolean))
 				joins[0] = true;
-			return {
-				...payment,
-				joins,
-				payer: payment.payer === removed ? 0 : payment.payer,
-			};
+			/* 삭제된 사람을 가리키던 결제자 참조를 재매핑한다 */
+			let payer = payment.payer;
+			if (payer === id)
+				payer = 0;
+			else if (payer > id)
+				payer -= 1;
+			return { ...payment, joins, payer };
 		}));
-		setErrorMsg('');
+		setPeopleMsg('');
+		touch();
 	};
 
 	const handleChangeName = (id, value) => {
 		setNames(names.map((name, i) => (i === id ? value : name)));
+		touch();
 	};
 
 	const handleChangeMoney = (pid, value) => {
 		setPayments(payments.map((payment) =>
 			payment.pid === pid ? { ...payment, money: value } : payment));
+		setSubmitMsg('');
+		touch();
 	};
 
 	const handleSelectPayer = (pid, payer) => {
 		setPayments(payments.map((payment) =>
 			payment.pid === pid ? { ...payment, payer } : payment));
+		touch();
 	};
 
 	const handleToggleJoin = (pid, personId) => {
@@ -92,11 +138,13 @@ function Calculation() {
 			/* 적어도 한 명은 N빵 대상이어야 한다 */
 			return joins.some(Boolean) ? { ...payment, joins } : payment;
 		}));
+		touch();
 	};
 
 	const handleAddPayment = () => {
 		const nextPid = payments[payments.length - 1].pid + 1;
 		setPayments([...payments, newPayment(nextPid, number)]);
+		touch();
 	};
 
 	const handleDeletePayment = (pid) => {
@@ -107,6 +155,11 @@ function Calculation() {
 	};
 
 	const handleSubmit = () => {
+		/* 입력 실수를 결과 화면("정산할 게 없네요")으로 보내지 않는다 */
+		if (!payments.some((payment) => Number(payment.money) > 0)) {
+			setSubmitMsg('결제 금액을 입력해 주세요.');
+			return;
+		}
 		const data = {
 			names,
 			payments: payments.map(({ payer, money, joins }) => ({ payer, money, joins })),
@@ -122,40 +175,50 @@ function Calculation() {
 				<Link to="/">
 					<img className="topbar__logo" src={logo} alt="빵" />
 				</Link>
-				<div className="topbar__title">정보 입력</div>
+				<div className="topbar__title">누가 얼마 냈나요?</div>
 			</div>
 
-			{/* 인원 */}
-			<div className="card">
-				<div className="card__label">몇 명인가요?</div>
-				<div className="stepper">
-					<button
-						className="btn stepper__button"
-						aria-label="인원 줄이기"
-						onClick={handleRemovePerson}>−</button>
-					<div className="stepper__count">{number}명</div>
-					<button
-						className="btn stepper__button"
-						aria-label="인원 늘리기"
-						onClick={handleAddPerson}>+</button>
+			{/* 지난 정산 복원 배너 */}
+			{pendingDraft &&
+			<div className="draftBanner">
+				<span className="draftBanner__text">지난 정산이 남아 있어요</span>
+				<div className="draftBanner__actions">
+					<button className="btn draftBanner__restore" onClick={handleRestoreDraft}>
+						이어하기
+					</button>
+					<button className="btn draftBanner__dismiss" onClick={handleDismissDraft}>
+						새로 시작
+					</button>
 				</div>
-				<div className="errorMsg">{errorMsg}</div>
 			</div>
+			}
 
-			{/* 이름 */}
+			{/* 사람 */}
 			<div className="card">
-				<div className="card__label">이름</div>
-				<div className="nameGrid">
+				<div className="card__head">
+					<span className="card__label">누가 함께했나요?</span>
+					<span className="card__count">{number}명</span>
+				</div>
+				<div className="personList">
 					{names.map((name, id) => (
-						<input
-							key={id}
-							className="field"
-							placeholder={`사람${id + 1}`}
-							autoComplete="off"
-							value={name}
-							onChange={(e) => handleChangeName(id, e.target.value)} />
+						<div key={id} className="personRow">
+							<input
+								className="field"
+								placeholder={`사람${id + 1}`}
+								autoComplete="off"
+								value={name}
+								onChange={(e) => handleChangeName(id, e.target.value)} />
+							<button
+								className="btn personRow__remove"
+								aria-label={`${displayName(id)} 빼기`}
+								onClick={() => handleRemovePerson(id)}>✕</button>
+						</div>
 					))}
 				</div>
+				<button className="btn addInline" onClick={handleAddPerson}>
+					＋ 사람 추가
+				</button>
+				{peopleMsg && <div className="errorMsg">{peopleMsg}</div>}
 			</div>
 
 			{/* 결제 내역 */}
@@ -172,27 +235,33 @@ function Calculation() {
 						}
 					</div>
 					<div className="paymentCard__row">
-						<select
-							className="field paymentCard__payer"
-							value={payment.payer}
-							onChange={(e) => handleSelectPayer(payment.pid, Number(e.target.value))}>
-							{names.map((_, id) => (
-								<option key={id} value={id}>{displayName(id)}</option>
-							))}
-						</select>
-						<div className="moneyField">
-							<input
-								className="field"
-								type="number"
-								inputMode="numeric"
-								placeholder="0"
-								value={payment.money}
-								autoComplete="off"
-								onChange={(e) => handleChangeMoney(payment.pid, e.target.value)} />
-							<span className="moneyField__unit">원</span>
-						</div>
+						<label className="fieldGroup">
+							<span className="fieldGroup__label">누가 냈나요?</span>
+							<select
+								className="field paymentCard__payer"
+								value={payment.payer}
+								onChange={(e) => handleSelectPayer(payment.pid, Number(e.target.value))}>
+								{names.map((_, id) => (
+									<option key={id} value={id}>{displayName(id)}</option>
+								))}
+							</select>
+						</label>
+						<label className="fieldGroup">
+							<span className="fieldGroup__label">얼마였나요?</span>
+							<div className="moneyField">
+								<input
+									className="field"
+									type="number"
+									inputMode="numeric"
+									placeholder="0"
+									value={payment.money}
+									autoComplete="off"
+									onChange={(e) => handleChangeMoney(payment.pid, e.target.value)} />
+								<span className="moneyField__unit">원</span>
+							</div>
+						</label>
 					</div>
-					<div className="paymentCard__joinsLabel">함께한 사람</div>
+					<div className="paymentCard__joinsLabel">누구 몫인가요?</div>
 					<div className="chips">
 						{payment.joins.map((join, id) => (
 							<button
@@ -215,6 +284,7 @@ function Calculation() {
 				<button className="btn btn--primary" onClick={handleSubmit}>
 					정산하기
 				</button>
+				{submitMsg && <div className="errorMsg">{submitMsg}</div>}
 			</div>
 		</div>
 	);

@@ -8,6 +8,18 @@
  */
 
 const STORAGE_KEY = 'n-bread:draft';
+const SESSION_KEY = 'n-bread:active-session';
+
+/* 같은 브라우저 세션(새로고침)과 새 방문을 구분한다.
+   새로고침이면 draft 를 조용히 복원하고, 새 방문이면 배너로 제안만 한다. */
+export function isSessionActive() {
+	try {
+		return sessionStorage.getItem(SESSION_KEY) === '1';
+	}
+	catch {
+		return false;
+	}
+}
 
 /* base64url (유니코드 이름 안전) */
 export function encodeData(data) {
@@ -35,6 +47,7 @@ export function decodeData(encoded) {
 export function saveDraft(data) {
 	try {
 		localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+		sessionStorage.setItem(SESSION_KEY, '1');
 	}
 	catch {
 		/* 시크릿 모드 등에서 저장 실패해도 동작에는 지장 없다 */
