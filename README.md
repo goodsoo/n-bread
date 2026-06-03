@@ -1,6 +1,6 @@
 N빵 (N-bread)
 ============
-https://zzompang2.github.io/n-bread/#/
+https://goodsoo.github.io/n-bread/#/
 <img src="/readme/2-0.png" title="메인 화면" alt="MainScreen"></img>
 
 1 서비스 소개
@@ -37,5 +37,17 @@ https://zzompang2.github.io/n-bread/#/
 우선 기존대로 인원 수로 나눈 후 올림을 합니다. 결제한 사람이 받는 이자라고나 할까요? 이자는 최대 __N-1__ 원 이랍니다.
 * 예시) 3명이서 1000원 ==> 각자 지불할 돈 334원, 결제자가 받을 돈 668원
 
+5 개발
+-----
+2021년 1월 CRA(react-scripts 4) + 클래스 컴포넌트로 처음 만들었고, 2026년 6월 Vite + React 18 함수 컴포넌트로 재작성했습니다.
+정산 알고리즘은 `src/lib/settle.js` 순수 함수 모듈에 있고 `npm test` 로 검증합니다.
+
+```sh
+npm install
+npm run dev      # 개발 서버
+npm test         # 정산 알고리즘 테스트 (vitest)
+npm run deploy   # gh-pages 배포
+```
+
 * * *
-질문이나 오류 제보 > [ISSUE](https://github.com/zzompang2/n-bread/issues)
+질문이나 오류 제보 > [ISSUE](https://github.com/goodsoo/n-bread/issues)
