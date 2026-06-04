@@ -1,7 +1,104 @@
-.table__name {
-	text-align: center;
+/* ── 송금 흐름 카드 ──────────────────────────── */
+
+.flowCard {
+	display: flex;
+	align-items: center;
+	gap: .6rem;
+	padding: .9rem 1.1rem;
+	margin-bottom: .55rem;
 }
 
-.empty {
-	height: 2rem;
+.flowCard__name {
+	flex: 1;
+	font-weight: 700;
+	font-size: 1rem;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.flowCard__name--to {
+	text-align: right;
+	color: var(--green);
+}
+
+.flowCard__arrow {
+	flex: 0 0 auto;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	line-height: 1.1;
+}
+
+.flowCard__money {
+	font-size: .85rem;
+	font-weight: 800;
+	color: var(--crust);
+}
+
+.flowCard__line {
+	color: var(--brown-300);
+	font-size: .95rem;
+}
+
+.roundingNote {
+	margin: .2rem .2rem .8rem;
+	font-size: .78rem;
+	line-height: 1.5;
+	color: var(--brown-500);
+}
+
+/* ── 각자 부담 정리 ──────────────────────────── */
+
+.balanceCard {
+	padding: .4rem 1.1rem;
+}
+
+.balanceRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: .65rem 0;
+	border-bottom: 1px solid var(--line);
+}
+
+.balanceRow:last-child {
+	border-bottom: none;
+}
+
+.balanceRow__name {
+	font-weight: 600;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.balanceRow__amount {
+	font-size: .9rem;
+	color: var(--brown-300);
+}
+
+.balanceRow__amount--send {
+	color: var(--brown-700);
+	font-weight: 700;
+}
+
+.balanceRow__amount--receive {
+	color: var(--green);
+	font-weight: 700;
+}
+
+/* ── 기타 ────────────────────────────────────── */
+
+.resultEmpty {
+	text-align: center;
+	line-height: 1.6;
+	padding: 1.6rem 1.1rem;
+}
+
+.resultActions {
+	margin-top: 1.4rem;
+	display: flex;
+	flex-direction: column;
+	gap: .7rem;
 }

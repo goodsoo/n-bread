@@ -1,153 +1,246 @@
-.container {
-	min-width: 10rem;
-	padding: 3rem 0 0 0;
+/* ── 지난 정산 복원 배너 ─────────────────────── */
 
+.draftBanner {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: .6rem;
+	padding: .7rem .9rem;
+	margin-bottom: 1rem;
+	background: var(--crust-soft);
+	border: 1.5px solid var(--crust);
+	border-radius: var(--radius);
+}
+
+.draftBanner__text {
+	font-size: .88rem;
+	font-weight: 600;
+	color: var(--brown-700);
+}
+
+.draftBanner__actions {
+	display: flex;
+	gap: .4rem;
+	flex: 0 0 auto;
+}
+
+.draftBanner__restore {
+	padding: .45rem .8rem;
+	background: var(--brown-700);
+	color: #fff;
+	font-size: .82rem;
+	font-weight: 700;
+}
+
+.draftBanner__dismiss {
+	padding: .45rem .8rem;
+	background: transparent;
+	border: 1.5px solid var(--brown-300);
+	color: var(--brown-500);
+	font-size: .82rem;
+	font-weight: 600;
+}
+
+/* ── 사람 카드 ───────────────────────────────── */
+
+.card__head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	margin-bottom: .7rem;
+}
+
+.card__head .card__label {
+	margin-bottom: 0;
+}
+
+.card__count {
+	font-size: .85rem;
+	font-weight: 800;
+	color: var(--crust);
+}
+
+.personList {
 	display: flex;
 	flex-direction: column;
-	align-items: center;
+	gap: .5rem;
 }
 
-.logoImage_small {
-	max-width: 100px;
-}
-
-.title {
-	padding: .5rem 0 2rem 0;
-	color: var(--dark-brown);
-	text-align: center;
-	font-family: 'Black Han Sans';
-	font-size: 2rem;
-}
-
-
-.numberBox {
-	/* display: flex; */
-	border: .2rem solid white;
-	/* background-color: var(--dark-brown); */
-	background-color: rgba(0, 0, 0, 0);
+.personRow {
 	display: flex;
 	align-items: center;
+	gap: .45rem;
 }
 
-.numberBox input {
-	width: 5rem;
-	padding: 1rem .5rem;
-	border: none;
-	background-color: rgba(0, 0, 0, 0);;
-	
-	text-align: center;
-	color: var(--dark-brown);
+.personRow .field {
+	flex: 1;
 }
 
-.numberBox button {
-	width: 4rem;
-	padding: 1rem;
-	border: none;
-	color: white;
-	background-color: var(--dark-brown);
+.personRow__remove {
+	flex: 0 0 auto;
+	width: 1.9rem;
+	height: 1.9rem;
+	border-radius: 50%;
+	background: transparent;
+	color: var(--brown-300);
+	font-size: .85rem;
 }
 
-.errorMsg {
-	height: 1rem;
-	padding: .5rem 0 0 0;
-	color: brown;
-	text-align: center;
-	font-family: 'Nanum Myeongjo';
-	font-size: .8em;
+.personRow__remove:hover {
+	background: var(--cream);
+	color: #b03a2e;
 }
 
-.people {
+.addInline {
+	width: 100%;
+	margin-top: .6rem;
+	padding: .65rem;
+	background: transparent;
+	border: 1.5px dashed var(--brown-300);
+	border-radius: var(--radius-sm);
+	color: var(--brown-500);
+	font-size: .9rem;
+	font-weight: 600;
+}
+
+.addInline:hover {
+	background: var(--crust-soft);
+	border-color: var(--crust);
+	color: var(--brown-700);
+}
+
+/* ── 결제 카드 ───────────────────────────────── */
+
+.card__label--section {
+	margin: .4rem 0 .6rem .2rem;
+}
+
+.paymentCard__head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: .7rem;
+}
+
+.paymentCard__index {
+	font-size: .8rem;
+	font-weight: 700;
+	color: var(--crust);
+}
+
+.paymentCard__delete {
+	width: 1.7rem;
+	height: 1.7rem;
+	border-radius: 50%;
+	background: transparent;
+	color: var(--brown-300);
+	font-size: .85rem;
+}
+
+.paymentCard__delete:hover {
+	background: var(--cream);
+	color: #b03a2e;
+}
+
+.paymentCard__row {
+	display: flex;
+	gap: .55rem;
+}
+
+.fieldGroup {
 	display: flex;
 	flex-direction: column;
-	align-items: center;
-	/* background-color: red; */
+	gap: .3rem;
 }
 
-.table__row {
-	display: flex;
-	flex-direction: row;
-	align-items: flex-end;
+.fieldGroup:first-child {
+	flex: 0 0 38%;
 }
 
-.table__id,
-.table__name,
-.table__idAndName,
-.table__pay,
-.table__checkbox,
-.table__delButton {
-	font-size: .8em;
-	padding: .2rem;
-	margin: 0;
-	border: .1rem solid rgba(0, 0, 0, 0);
-	height: 1rem;
+.fieldGroup:last-child {
+	flex: 1;
 }
 
-.table__id {
-	width: 2rem;
-	text-align: center;
+.fieldGroup__label {
+	font-size: .72rem;
+	font-weight: 600;
+	color: var(--brown-500);
 }
 
-.table__name {
-	width: 6rem;
-	background-color: rgba(0, 0, 0, 0);
+.paymentCard__payer {
+	width: 100%;
 }
 
-.table__pay {
-	width: 5rem;
-	justify-content: center;
-	display: flex;
-	flex-direction: row;
+.moneyField {
+	position: relative;
 }
 
-.table__pay input {
-	background-color: rgba(0, 0, 0, 0);
-	width: 5em;
-	padding-right: 0.2rem;
+.moneyField input {
+	width: 100%;
 	text-align: right;
+	padding-right: 2rem;
 }
 
-.table__checkbox {
-	width: 1.5rem;
+.moneyField__unit {
+	position: absolute;
+	right: .8rem;
+	top: 50%;
+	transform: translateY(-50%);
+	color: var(--brown-500);
+	font-size: .9rem;
+	pointer-events: none;
 }
 
-/* .table__checkbox input + label::before{
-	border: 2px solid red;
-	background-color: red;
-} */
-
-.table__checkboxTag {
-	text-align: right;
-	writing-mode: vertical-lr;
-	height: 5rem;
+.paymentCard__joinsLabel {
+	margin: .8rem 0 .45rem;
+	font-size: .72rem;
+	font-weight: 600;
+	color: var(--brown-500);
 }
 
-.table__delButton {
-	width: 2rem;
-	background-color: rgba(0, 0, 0, 0);
+/* ── 이름 칩 토글 ────────────────────────────── */
+
+.chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: .4rem;
 }
 
-.table__delButton button {
-	color: brown;
+.chip {
+	padding: .4rem .75rem;
+	border-radius: 999px;
+	background: var(--cream);
+	border: 1.5px solid var(--line);
+	color: var(--brown-500);
+	font-size: .85rem;
+	font-weight: 600;
 }
 
-.whiteBox {
-	border: .1rem solid white;
+.chip--on {
+	background: var(--brown-700);
+	border-color: var(--brown-700);
+	color: #fff;
 }
 
-.payments {
-	margin: 0;
-	padding: 0;
+/* ── 결제 추가 / 제출 ─────────────────────────── */
+
+.addPayment {
+	width: 100%;
+	padding: .85rem;
+	background: transparent;
+	border: 1.5px dashed var(--brown-300);
+	border-radius: var(--radius);
+	color: var(--brown-500);
+	font-size: .95rem;
+	font-weight: 600;
 }
 
-.addButton {
-	width: 2rem;
-	height: 2rem;
-	border-radius: 1rem;
-	background-color: var(--dark-brown);
-	margin: 1.5rem;
+.addPayment:hover {
+	background: var(--crust-soft);
+	border-color: var(--crust);
+	color: var(--brown-700);
+}
 
-	color: white;
-	font-size: 1.5rem;
-
-	box-shadow:.2em .2em 0 0 white;
+.submitArea {
+	margin-top: 1.4rem;
 }
