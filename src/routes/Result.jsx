@@ -1,22 +1,23 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import './Result.css';
 import logo from '../images/logo_after.png';
 import { settle } from '../lib/settle.js';
 import { decodeData, saveDraft } from '../lib/share.js';
+import { hasHistory } from '../lib/history.js';
 
 const won = (n) => `${n.toLocaleString('ko-KR')}원`;
 
 function Result() {
 	const [searchParams] = useSearchParams();
 	const [copied, setCopied] = useState(false);
-	const data = decodeData(searchParams.get('d') ?? '');
+	const d = searchParams.get('d') ?? '';
+	const data = decodeData(d);
 
-	/* 공유받은 URL 로 열어도 [수정하기] 가 동작하도록 draft 로 보존한다 */
-	useEffect(() => {
-		if (data)
-			saveDraft(data);
-	}, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
+	/* 내 기록에 있는 d 면 내가 만든 정산(owner), 아니면 공유받은 것(viewer).
+		 viewer 에게 [수정하기] 를 보여주지 않고, 열람만으로 viewer 의 draft 를
+		 덮어쓰지 않는다 — draft 적재는 owner 가 [수정하기] 를 누르는 시점에만. */
+	const isMine = hasHistory(d);
 
 	/* 구버전은 /result 새로고침 시 크래시했다 — 데이터가 없으면 안내로 대신한다 */
 	if (!data)
@@ -129,14 +130,24 @@ function Result() {
 				<Link className="btn btn--primary" to="/calculation">
 					금액 입력하러 가기
 				</Link>
-				:
+				: isMine ?
 				<>
 					<button className="btn btn--primary" onClick={handleCopy}>
 						{copied ? '복사했어요!' : '결과 링크 복사'}
 					</button>
-					<Link className="btn btn--ghost" to="/calculation">
+					{/* draft 적재는 이 클릭 시점에만 — 열람만으로는 덮어쓰지 않는다 */}
+					<Link className="btn btn--ghost" to="/calculation" onClick={() => saveDraft(data)}>
 						수정하기
 					</Link>
+				</>
+				:
+				<>
+					<Link className="btn btn--primary" to="/calculation">
+						나도 N빵 만들기
+					</Link>
+					<button className="btn btn--ghost" onClick={handleCopy}>
+						{copied ? '복사했어요!' : '결과 링크 복사'}
+					</button>
 				</>
 				}
 			</div>
