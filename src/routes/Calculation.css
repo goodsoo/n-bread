@@ -150,6 +150,10 @@
 	color: #b03a2e;
 }
 
+.paymentCard__label {
+	margin-bottom: .7rem;
+}
+
 .paymentCard__row {
 	display: flex;
 	gap: .55rem;

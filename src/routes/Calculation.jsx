@@ -10,6 +10,7 @@ const MIN_PEOPLE = 2;
 
 const newPayment = (pid, number) => ({
 	pid,
+	label: '',
 	payer: 0,
 	money: '',
 	joins: new Array(number).fill(true),
@@ -58,7 +59,7 @@ function Calculation() {
 			return;
 		saveDraft({
 			names,
-			payments: payments.map(({ payer, money, joins }) => ({ payer, money, joins })),
+			payments: payments.map(({ label, payer, money, joins }) => ({ label, payer, money, joins })),
 		});
 	}, [names, payments, pendingDraft]);
 
@@ -118,6 +119,12 @@ function Calculation() {
 		touch();
 	};
 
+	const handleChangeLabel = (pid, value) => {
+		setPayments(payments.map((payment) =>
+			payment.pid === pid ? { ...payment, label: value } : payment));
+		touch();
+	};
+
 	const handleChangeMoney = (pid, value) => {
 		setPayments(payments.map((payment) =>
 			payment.pid === pid ? { ...payment, money: value } : payment));
@@ -163,7 +170,7 @@ function Calculation() {
 		}
 		const data = {
 			names,
-			payments: payments.map(({ payer, money, joins }) => ({ payer, money, joins })),
+			payments: payments.map(({ label, payer, money, joins }) => ({ label, payer, money, joins })),
 		};
 		const d = encodeData(data);
 		/* 기록 = 지난 정산 목록의 저장소이자, 결과 화면 owner 판별 근거 */
@@ -249,6 +256,13 @@ function Calculation() {
 							onClick={() => handleDeletePayment(payment.pid)}>✕</button>
 						}
 					</div>
+					{/* 선택적 결제 이름 — 비우면 "결제 N" 으로 동작·표시 (D) */}
+					<input
+						className="field paymentCard__label"
+						placeholder="예: 점심, 택시"
+						autoComplete="off"
+						value={payment.label}
+						onChange={(e) => handleChangeLabel(payment.pid, e.target.value)} />
 					<div className="paymentCard__row">
 						<label className="fieldGroup">
 							<span className="fieldGroup__label">누가 냈나요?</span>
