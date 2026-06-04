@@ -2,13 +2,15 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Calculation.css';
 import logo from '../images/logo_before.png';
-import { MAX_PEOPLE } from '../lib/settle.js';
-import { encodeData, isSessionActive, loadDraft, saveDraft } from '../lib/share.js';
+import { MAX_PEOPLE, settle } from '../lib/settle.js';
+import { clearDraft, encodeData, isSessionActive, loadDraft, saveDraft } from '../lib/share.js';
+import { addHistory } from '../lib/history.js';
 
 const MIN_PEOPLE = 2;
 
 const newPayment = (pid, number) => ({
 	pid,
+	label: '',
 	payer: 0,
 	money: '',
 	joins: new Array(number).fill(true),
@@ -57,7 +59,7 @@ function Calculation() {
 			return;
 		saveDraft({
 			names,
-			payments: payments.map(({ payer, money, joins }) => ({ payer, money, joins })),
+			payments: payments.map(({ label, payer, money, joins }) => ({ label, payer, money, joins })),
 		});
 	}, [names, payments, pendingDraft]);
 
@@ -117,6 +119,12 @@ function Calculation() {
 		touch();
 	};
 
+	const handleChangeLabel = (pid, value) => {
+		setPayments(payments.map((payment) =>
+			payment.pid === pid ? { ...payment, label: value } : payment));
+		touch();
+	};
+
 	const handleChangeMoney = (pid, value) => {
 		setPayments(payments.map((payment) =>
 			payment.pid === pid ? { ...payment, money: value } : payment));
@@ -162,9 +170,21 @@ function Calculation() {
 		}
 		const data = {
 			names,
-			payments: payments.map(({ payer, money, joins }) => ({ payer, money, joins })),
+			payments: payments.map(({ label, payer, money, joins }) => ({ label, payer, money, joins })),
 		};
-		navigate(`/result?d=${encodeData(data)}`);
+		const d = encodeData(data);
+		/* 기록 = 지난 정산 목록의 저장소이자, 결과 화면 owner 판별 근거 */
+		addHistory({
+			d,
+			createdAt: Date.now(),
+			peopleCount: names.length,
+			total: data.payments.reduce((sum, { money }) => sum + (Math.floor(Number(money)) || 0), 0),
+			flowCount: settle(names.length, data.payments).flows.length,
+		});
+		/* 완료된 정산은 history 에 있으므로 draft 는 비운다 — 다음 N빵하기 때
+			 완료분이 '이어하기' 로 다시 뜨지 않게 한다 */
+		clearDraft();
+		navigate(`/result?d=${d}`);
 	};
 
 	const displayName = (id) => (names[id] === '' ? `사람${id + 1}` : names[id]);
@@ -172,6 +192,7 @@ function Calculation() {
 	return (
 		<div className="page">
 			<div className="topbar">
+				<Link className="btn topbar__back" to="/" aria-label="홈으로">←</Link>
 				<Link to="/">
 					<img className="topbar__logo" src={logo} alt="빵" />
 				</Link>
@@ -208,10 +229,14 @@ function Calculation() {
 								autoComplete="off"
 								value={name}
 								onChange={(e) => handleChangeName(id, e.target.value)} />
+							{/* 최소 인원에선 ✕ 를 숨긴다 — 결제 카드(1건일 때 삭제 숨김)와 같은 패턴.
+								에러 메시지로 사후 차단하지 않고 floor 를 구조로 드러낸다 */}
+							{number > MIN_PEOPLE &&
 							<button
 								className="btn personRow__remove"
 								aria-label={`${displayName(id)} 빼기`}
 								onClick={() => handleRemovePerson(id)}>✕</button>
+							}
 						</div>
 					))}
 				</div>
@@ -234,6 +259,13 @@ function Calculation() {
 							onClick={() => handleDeletePayment(payment.pid)}>✕</button>
 						}
 					</div>
+					{/* 선택적 결제 이름 — 비우면 "결제 N" 으로 동작·표시 (D) */}
+					<input
+						className="field paymentCard__label"
+						placeholder="예: 점심, 택시"
+						autoComplete="off"
+						value={payment.label}
+						onChange={(e) => handleChangeLabel(payment.pid, e.target.value)} />
 					<div className="paymentCard__row">
 						<label className="fieldGroup">
 							<span className="fieldGroup__label">누가 냈나요?</span>
