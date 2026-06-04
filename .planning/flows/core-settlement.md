@@ -1,6 +1,6 @@
 # Flow: 핵심 정산 — 입력 → 결과 → 공유 → 수신자 열람 → 기록
 
-**Defined:** 2026-06-04 · **Author:** UX 담당자(high-level) → AI(structure) · **Status:** In-build
+**Defined:** 2026-06-04 · **Author:** UX 담당자(high-level) → AI(structure) · **Status:** Verified
 **App:** n-bread · **Stack:** React Router v6(HashRouter, 코드 내 `<Route>`) · 상태 백본 없음(컴포넌트 로컬 useState) · 데이터/IO = localStorage(`lib/share.js`) + URL 쿼리 인코딩(`encodeData`/`decodeData`) · 도메인 = `lib/settle.js`(vitest) · DS 없음
 
 <intent>
