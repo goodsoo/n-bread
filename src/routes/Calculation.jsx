@@ -182,6 +182,7 @@ function Calculation() {
 	return (
 		<div className="page">
 			<div className="topbar">
+				<Link className="btn topbar__back" to="/" aria-label="홈으로">←</Link>
 				<Link to="/">
 					<img className="topbar__logo" src={logo} alt="빵" />
 				</Link>

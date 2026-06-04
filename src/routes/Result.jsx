@@ -11,6 +11,7 @@ const won = (n) => `${n.toLocaleString('ko-KR')}원`;
 function Result() {
 	const [searchParams] = useSearchParams();
 	const [copied, setCopied] = useState(false);
+	const [copyFailed, setCopyFailed] = useState(false);
 	const d = searchParams.get('d') ?? '';
 	const data = decodeData(d);
 
@@ -57,16 +58,20 @@ function Result() {
 		try {
 			await navigator.clipboard.writeText(location.href);
 			setCopied(true);
+			setCopyFailed(false);
 			setTimeout(() => setCopied(false), 1500);
 		}
 		catch {
-			/* clipboard 권한이 없으면 조용히 무시 */
+			/* clipboard 권한이 없으면 직접 복사하도록 안내한다 */
+			setCopyFailed(true);
 		}
 	};
 
 	return (
 		<div className="page">
 			<div className="topbar">
+				{/* owner 는 입력으로 돌아가고, 수신자(viewer)는 입력 이력이 없으니 홈으로 */}
+				<Link className="btn topbar__back" to={isMine ? '/calculation' : '/'} aria-label="뒤로">←</Link>
 				<Link to="/">
 					<img className="topbar__logo" src={logo} alt="빵" />
 				</Link>
@@ -149,6 +154,9 @@ function Result() {
 						{copied ? '복사했어요!' : '결과 링크 복사'}
 					</button>
 				</>
+				}
+				{copyFailed &&
+				<div className="errorMsg">복사하지 못했어요. 주소창의 링크를 직접 복사해 주세요.</div>
 				}
 			</div>
 		</div>
