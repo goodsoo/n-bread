@@ -1,6 +1,6 @@
 # Flow: 항목화 정산 — 결제 이름 + 결과 항목별 내역
 
-**Defined:** 2026-06-04 · **Author:** UX 담당자(아이디어 D+E) → AI(structure) · **Status:** In-build
+**Defined:** 2026-06-04 · **Author:** UX 담당자(아이디어 D+E) → AI(structure) · **Status:** Verified
 **App:** n-bread · **Stack:** React Router v6(HashRouter) · 컴포넌트 로컬 useState · localStorage(`lib/share.js`) + URL 쿼리 인코딩 · 도메인 = `lib/settle.js`(vitest)
 
 <intent>
