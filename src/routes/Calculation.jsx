@@ -219,10 +219,14 @@ function Calculation() {
 								autoComplete="off"
 								value={name}
 								onChange={(e) => handleChangeName(id, e.target.value)} />
+							{/* 최소 인원에선 ✕ 를 숨긴다 — 결제 카드(1건일 때 삭제 숨김)와 같은 패턴.
+								에러 메시지로 사후 차단하지 않고 floor 를 구조로 드러낸다 */}
+							{number > MIN_PEOPLE &&
 							<button
 								className="btn personRow__remove"
 								aria-label={`${displayName(id)} 빼기`}
 								onClick={() => handleRemovePerson(id)}>✕</button>
+							}
 						</div>
 					))}
 				</div>
