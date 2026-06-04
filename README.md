@@ -1,6 +1,6 @@
 N빵 (N-bread)
 ============
-https://goodsoo.github.io/n-bread/#/
+https://nbread.goodsoob.com/#/
 <img src="/readme/2-0.png" title="메인 화면" alt="MainScreen"></img>
 
 1 서비스 소개

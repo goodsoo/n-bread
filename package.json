@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "private": true,
   "type": "module",
-  "homepage": "https://goodsoo.github.io/n-bread",
+  "homepage": "https://nbread.goodsoob.com",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

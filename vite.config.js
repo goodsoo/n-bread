@@ -1,8 +1,8 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// gh-pages 배포 경로: https://goodsoo.github.io/n-bread/
+// 커스텀 도메인 배포: https://nbread.goodsoob.com/ (public/CNAME)
 export default defineConfig({
-	base: '/n-bread/',
+	base: '/',
 	plugins: [react()],
 });
