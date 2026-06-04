@@ -15,9 +15,9 @@
 
 .historyItem {
 	display: flex;
-	align-items: stretch;
+	align-items: center;
 	gap: .4rem;
-	padding: 0;
+	padding: 0 .5rem 0 0;
 	overflow: hidden;
 }
 
@@ -54,16 +54,20 @@
 
 .historyItem__remove {
 	flex: 0 0 auto;
-	padding: 0 1rem;
-	font-size: .8rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	/* 2차 파괴 액션 — 항목 내용이 주인공이도록 가볍고 작게, 탭 영역만 44px */
+	min-width: 44px;
+	min-height: 44px;
+	padding: 0 .4rem;
+	font-size: .78rem;
 	color: var(--brown-300);
-	border-left: 1px solid var(--line);
-	border-radius: 0;
+	background: transparent;
 }
 
 .historyItem__remove:hover {
-	color: var(--brown-700);
-	background: var(--crust-soft);
+	color: #b03a2e;
 }
 
 .historyCta {
