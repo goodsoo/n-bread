@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import './History.css';
-import logo from '../images/logo.png';
+import logo from '../images/logo_after.png';
 import { listHistory, removeHistory } from '../lib/history.js';
 
 const won = (n) => `${(n ?? 0).toLocaleString('ko-KR')}원`;
