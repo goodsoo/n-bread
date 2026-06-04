@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
 	computeBalances,
+	computeShares,
 	partitionZeroSumSubsets,
 	computeFlows,
 	settle,
@@ -53,6 +54,69 @@ describe('computeBalances', () => {
 			{ payer: 3, money: 89, joins: allJoin(4) },
 		]);
 		expect(balances.reduce((a, b) => a + b, 0)).toBe(0);
+	});
+});
+
+describe('computeShares', () => {
+	it('나누어 떨어지는 결제는 균등 분담한다', () => {
+		const shares = computeShares([
+			{ label: '점심', payer: 0, money: 3000, joins: allJoin(3) },
+		]);
+		expect(shares).toHaveLength(1);
+		expect(shares[0]).toMatchObject({ index: 0, label: '점심', payer: 0, total: 3000, share: 1000 });
+		expect(shares[0].shares).toEqual([{ id: 0, amount: 1000 }, { id: 1, amount: 1000 }, { id: 2, amount: 1000 }]);
+	});
+
+	it('올림 정책: 3명 1000원 → 각자 334, 올림 합 1002 (computeBalances 와 정합)', () => {
+		const shares = computeShares([
+			{ payer: 0, money: 1000, joins: allJoin(3) },
+		]);
+		expect(shares[0]).toMatchObject({ total: 1000, rounded: 1002, share: 334 });
+		expect(shares[0].shares.map((s) => s.amount)).toEqual([334, 334, 334]);
+	});
+
+	it('금액이 0 이거나 빈 결제는 내역에서 제외한다', () => {
+		const shares = computeShares([
+			{ payer: 0, money: '', joins: allJoin(2) },
+			{ payer: 1, money: 0, joins: allJoin(2) },
+			{ payer: 0, money: 1000, joins: allJoin(2) },
+		]);
+		expect(shares).toHaveLength(1);
+		/* 원래 결제 위치(index) 를 보존한다 — "결제 3" 표시용 */
+		expect(shares[0].index).toBe(2);
+	});
+
+	it('N빵 대상이 아닌 사람은 분담에서 빠진다', () => {
+		const shares = computeShares([
+			{ payer: 0, money: 1000, joins: [false, true, true] },
+		]);
+		expect(shares[0].shares.map((s) => s.id)).toEqual([1, 2]);
+		expect(shares[0].share).toBe(500);
+	});
+
+	it('label 이 없으면 빈 문자열로 둔다 (옛 링크 하위호환)', () => {
+		const shares = computeShares([
+			{ payer: 0, money: 1000, joins: allJoin(2) },
+		]);
+		expect(shares[0].label).toBe('');
+	});
+
+	it('분담 내역이 computeBalances 와 정합한다 (참가자 분담 - 결제자 회수 = 순부담)', () => {
+		const payments = [
+			{ payer: 0, money: 1234, joins: [true, true, true, false] },
+			{ payer: 2, money: 567, joins: [false, true, true, true] },
+			{ payer: 3, money: 89, joins: allJoin(4) },
+		];
+		const balances = computeBalances(4, payments);
+		const shares = computeShares(payments);
+		/* 각 사람의 순부담 = (참가한 결제들의 분담액 합) - (본인이 결제자인 결제들의 올림 총액 합) */
+		const reconstructed = new Array(4).fill(0);
+		for (const p of shares) {
+			reconstructed[p.payer] -= p.rounded;
+			for (const s of p.shares)
+				reconstructed[s.id] += s.amount;
+		}
+		expect(reconstructed).toEqual(balances);
 	});
 });
 

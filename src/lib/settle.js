@@ -48,6 +48,45 @@ export function computeBalances(count, payments) {
 	return balances;
 }
 
+/**
+ * 결제별 분담 내역을 구한다 — "각자 어느 결제에 얼마씩" 을 펼쳐 보기 위한 것.
+ *
+ * 올림 정책은 computeBalances 와 동일하다(정합 보장): 나누어 떨어지지 않으면
+ * 올림해서 N등분하고, 결제자는 올림된 총액(rounded)을 회수한다. 따라서
+ * Σ(분담액) − Σ(결제자 회수액) 은 computeBalances 결과와 정확히 일치한다.
+ *
+ * 금액 0·빈 결제, N빵 대상 0명인 결제는 내역에서 제외한다.
+ * 원래 결제 위치(index)를 보존해 "결제 N" 표시에 쓴다.
+ *
+ * @param {{label?: string, payer: number, money: number|string, joins: boolean[]}[]} payments
+ * @returns {{index:number,label:string,payer:number,total:number,rounded:number,share:number,shares:{id:number,amount:number}[]}[]}
+ */
+export function computeShares(payments) {
+	const result = [];
+
+	payments.forEach((payment, index) => {
+		const { payer, money, joins, label } = payment;
+		const joinCount = joins.filter(Boolean).length;
+		const total = Math.floor(Number(money)) || 0;
+		if (joinCount === 0 || total <= 0)
+			return;
+
+		/* computeBalances 와 같은 올림 */
+		const rest = total % joinCount;
+		const rounded = rest === 0 ? total : total + (joinCount - rest);
+		const share = rounded / joinCount;
+
+		const shares = [];
+		for (let i = 0; i < joins.length; i++)
+			if (joins[i])
+				shares.push({ id: i, amount: share });
+
+		result.push({ index, label: label ?? '', payer, total, rounded, share, shares });
+	});
+
+	return result;
+}
+
 /* k 개짜리 조합을 사전순으로 순회하는 generator */
 function* combinations(n, k) {
 	const combo = Array.from({ length: k }, (_, i) => i);
