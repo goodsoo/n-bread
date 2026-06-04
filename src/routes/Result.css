@@ -1,14 +1,22 @@
-/* ── 송금 흐름 카드 ──────────────────────────── */
+/* ── 송금 흐름 (한 카드 안에 행으로) ─────────── */
 
 .flowCard {
+	padding: .4rem 1.1rem;
+}
+
+.flowRow {
 	display: flex;
 	align-items: center;
 	gap: .6rem;
-	padding: .9rem 1.1rem;
-	margin-bottom: .55rem;
+	padding: .6rem 0;
+	border-bottom: 1px solid var(--line);
 }
 
-.flowCard__name {
+.flowRow:last-child {
+	border-bottom: none;
+}
+
+.flowRow__name {
 	flex: 1;
 	font-weight: 700;
 	font-size: 1rem;
@@ -17,12 +25,12 @@
 	white-space: nowrap;
 }
 
-.flowCard__name--to {
+.flowRow__name--to {
 	text-align: right;
 	color: var(--green);
 }
 
-.flowCard__arrow {
+.flowRow__arrow {
 	flex: 0 0 auto;
 	display: flex;
 	flex-direction: column;
@@ -30,13 +38,13 @@
 	line-height: 1.1;
 }
 
-.flowCard__money {
+.flowRow__money {
 	font-size: .85rem;
 	font-weight: 800;
 	color: var(--crust);
 }
 
-.flowCard__line {
+.flowRow__line {
 	color: var(--crust);
 	font-size: 1.3rem;
 	line-height: 1;

@@ -95,16 +95,18 @@ function Result() {
 				<div className="card__label card__label--section">
 					이렇게 보내면 끝나요 — 송금 {flows.length}번
 				</div>
-				{flows.map((flow, idx) => (
-					<div key={idx} className="card flowCard">
-						<span className="flowCard__name">{displayName(flow.from)}</span>
-						<span className="flowCard__arrow">
-							<span className="flowCard__money">{won(flow.money)}</span>
-							<span className="flowCard__line">⟶</span>
-						</span>
-						<span className="flowCard__name flowCard__name--to">{displayName(flow.to)}</span>
-					</div>
-				))}
+				<div className="card flowCard">
+					{flows.map((flow, idx) => (
+						<div key={idx} className="flowRow">
+							<span className="flowRow__name">{displayName(flow.from)}</span>
+							<span className="flowRow__arrow">
+								<span className="flowRow__money">{won(flow.money)}</span>
+								<span className="flowRow__line">⟶</span>
+							</span>
+							<span className="flowRow__name flowRow__name--to">{displayName(flow.to)}</span>
+						</div>
+					))}
+				</div>
 				{hasRounding &&
 				<div className="roundingNote">
 					나누어 떨어지지 않는 금액은 올림했어요. 남는 돈은 결제한 사람이 받아요.
