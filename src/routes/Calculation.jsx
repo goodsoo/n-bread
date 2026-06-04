@@ -261,7 +261,7 @@ function Calculation() {
 							</div>
 						</label>
 					</div>
-					<div className="paymentCard__joinsLabel">누구 몫인가요?</div>
+					<div className="paymentCard__joinsLabel">누구끼리 N빵하나요?</div>
 					<div className="chips">
 						{payment.joins.map((join, id) => (
 							<button
