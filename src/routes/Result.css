@@ -195,3 +195,15 @@
 	flex-direction: column;
 	gap: .7rem;
 }
+
+/* 복사 방법 둘(또는 복사+수정)을 한 줄에 나란히 */
+.copyRow {
+	display: flex;
+	gap: .7rem;
+}
+
+.copyRow > .btn {
+	flex: 1 1 0;
+	min-width: 0;
+	width: auto;
+}

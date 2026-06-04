@@ -10,6 +10,20 @@
 const STORAGE_KEY = 'n-bread:draft';
 const SESSION_KEY = 'n-bread:active-session';
 
+/**
+ * 송금 흐름을 메신저에 붙여넣을 일반 텍스트로 만든다 — 링크 없이 "누가 누구에게
+ * 얼마" 만. 결과 화면의 [텍스트 복사] 가 쓴다.
+ *
+ * @param {string[]} names
+ * @param {{from:number,to:number,money:number}[]} flows
+ * @returns {string}
+ */
+export function formatResultText(names, flows) {
+	const name = (id) => (names[id] === '' ? `사람${id + 1}` : names[id]);
+	const lines = flows.map((f) => `${name(f.from)} → ${name(f.to)}  ${f.money.toLocaleString('ko-KR')}원`);
+	return ['[N빵 정산]', ...lines].join('\n');
+}
+
 /* 같은 브라우저 세션(새로고침)과 새 방문을 구분한다.
    새로고침이면 draft 를 조용히 복원하고, 새 방문이면 배너로 제안만 한다. */
 export function isSessionActive() {

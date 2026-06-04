@@ -3,14 +3,15 @@ import { Link, useSearchParams } from 'react-router-dom';
 import './Result.css';
 import logo from '../images/logo_after.png';
 import { computePersonBreakdown, settle } from '../lib/settle.js';
-import { decodeData, saveDraft } from '../lib/share.js';
+import { decodeData, formatResultText, saveDraft } from '../lib/share.js';
 import { hasHistory } from '../lib/history.js';
 
 const won = (n) => `${n.toLocaleString('ko-KR')}원`;
 
 function Result() {
 	const [searchParams] = useSearchParams();
-	const [copied, setCopied] = useState(false);
+	/* 어떤 복사가 방금 됐는지 — 링크/텍스트 각자 "복사했어요!" 를 보여준다 */
+	const [copiedKind, setCopiedKind] = useState(null);
 	const [copyFailed, setCopyFailed] = useState(false);
 	/* 각자 부담 정리에서 펼쳐 본 사람들 — "내가 어디에 얼마 썼나" 를 행 안에서 본다 */
 	const [openRows, setOpenRows] = useState([]);
@@ -59,18 +60,21 @@ function Result() {
 
 	const displayName = (id) => (names[id] === '' ? `사람${id + 1}` : names[id]);
 
-	const handleCopy = async () => {
+	const copy = async (kind, text) => {
 		try {
-			await navigator.clipboard.writeText(location.href);
-			setCopied(true);
+			await navigator.clipboard.writeText(text);
+			setCopiedKind(kind);
 			setCopyFailed(false);
-			setTimeout(() => setCopied(false), 1500);
+			setTimeout(() => setCopiedKind((k) => (k === kind ? null : k)), 1500);
 		}
 		catch {
 			/* clipboard 권한이 없으면 직접 복사하도록 안내한다 */
 			setCopyFailed(true);
 		}
 	};
+
+	const handleCopyLink = () => copy('link', location.href);
+	const handleCopyText = () => copy('text', formatResultText(names, flows));
 
 	return (
 		<div className="page">
@@ -187,22 +191,36 @@ function Result() {
 				</Link>
 				: isMine ?
 				<>
-					<button className="btn btn--primary" onClick={handleCopy}>
-						{copied ? '복사했어요!' : '결과 링크 복사'}
+					<button className="btn btn--primary" onClick={handleCopyLink}>
+						{copiedKind === 'link' ? '복사했어요!' : '결과 링크 복사'}
 					</button>
-					{/* draft 적재는 이 클릭 시점에만 — 열람만으로는 덮어쓰지 않는다 */}
-					<Link className="btn btn--ghost" to="/calculation" onClick={() => saveDraft(data)}>
-						수정하기
-					</Link>
+					<div className="copyRow">
+						{flows.length > 0 &&
+						<button className="btn btn--ghost" onClick={handleCopyText}>
+							{copiedKind === 'text' ? '복사했어요!' : '텍스트 복사'}
+						</button>
+						}
+						{/* draft 적재는 이 클릭 시점에만 — 열람만으로는 덮어쓰지 않는다 */}
+						<Link className="btn btn--ghost" to="/calculation" onClick={() => saveDraft(data)}>
+							수정하기
+						</Link>
+					</div>
 				</>
 				:
 				<>
 					<Link className="btn btn--primary" to="/calculation">
 						나도 N빵 만들기
 					</Link>
-					<button className="btn btn--ghost" onClick={handleCopy}>
-						{copied ? '복사했어요!' : '결과 링크 복사'}
-					</button>
+					<div className="copyRow">
+						<button className="btn btn--ghost" onClick={handleCopyLink}>
+							{copiedKind === 'link' ? '복사했어요!' : '결과 링크 복사'}
+						</button>
+						{flows.length > 0 &&
+						<button className="btn btn--ghost" onClick={handleCopyText}>
+							{copiedKind === 'text' ? '복사했어요!' : '텍스트 복사'}
+						</button>
+						}
+					</div>
 				</>
 				}
 				{copyFailed &&
