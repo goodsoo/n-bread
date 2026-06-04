@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Calculation.css';
 import logo from '../images/logo_before.png';
-import { MAX_PEOPLE } from '../lib/settle.js';
+import { MAX_PEOPLE, settle } from '../lib/settle.js';
 import { encodeData, isSessionActive, loadDraft, saveDraft } from '../lib/share.js';
+import { addHistory } from '../lib/history.js';
 
 const MIN_PEOPLE = 2;
 
@@ -164,7 +165,16 @@ function Calculation() {
 			names,
 			payments: payments.map(({ payer, money, joins }) => ({ payer, money, joins })),
 		};
-		navigate(`/result?d=${encodeData(data)}`);
+		const d = encodeData(data);
+		/* 기록 = 지난 정산 목록의 저장소이자, 결과 화면 owner 판별 근거 */
+		addHistory({
+			d,
+			createdAt: Date.now(),
+			peopleCount: names.length,
+			total: data.payments.reduce((sum, { money }) => sum + (Math.floor(Number(money)) || 0), 0),
+			flowCount: settle(names.length, data.payments).flows.length,
+		});
+		navigate(`/result?d=${d}`);
 	};
 
 	const displayName = (id) => (names[id] === '' ? `사람${id + 1}` : names[id]);
