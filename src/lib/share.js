@@ -80,6 +80,18 @@ export function saveDraft(data) {
 	}
 }
 
+/* draft 를 비운다 — 정산하기로 완료된 정산은 '지난 정산'(history)에 들어가므로
+   draft 에 남겨 '이어하기' 로 다시 제안하면 이상하다. draft 는 '미완료 입력' 만
+   뜻하도록 제출 시 비운다. */
+export function clearDraft() {
+	try {
+		localStorage.removeItem(STORAGE_KEY);
+	}
+	catch {
+		/* 저장소 접근 불가면 어차피 draft 도 없다 */
+	}
+}
+
 export function loadDraft() {
 	try {
 		const data = JSON.parse(localStorage.getItem(STORAGE_KEY));

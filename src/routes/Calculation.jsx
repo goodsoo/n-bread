@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import './Calculation.css';
 import logo from '../images/logo_before.png';
 import { MAX_PEOPLE, settle } from '../lib/settle.js';
-import { encodeData, isSessionActive, loadDraft, saveDraft } from '../lib/share.js';
+import { clearDraft, encodeData, isSessionActive, loadDraft, saveDraft } from '../lib/share.js';
 import { addHistory } from '../lib/history.js';
 
 const MIN_PEOPLE = 2;
@@ -181,6 +181,9 @@ function Calculation() {
 			total: data.payments.reduce((sum, { money }) => sum + (Math.floor(Number(money)) || 0), 0),
 			flowCount: settle(names.length, data.payments).flows.length,
 		});
+		/* 완료된 정산은 history 에 있으므로 draft 는 비운다 — 다음 N빵하기 때
+			 완료분이 '이어하기' 로 다시 뜨지 않게 한다 */
+		clearDraft();
 		navigate(`/result?d=${d}`);
 	};
 

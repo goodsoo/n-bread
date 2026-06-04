@@ -79,8 +79,8 @@ function Result() {
 	return (
 		<div className="page">
 			<div className="topbar">
-				{/* owner 는 입력으로 돌아가고, 수신자(viewer)는 입력 이력이 없으니 홈으로 */}
-				<Link className="btn topbar__back" to={isMine ? '/calculation' : '/'} aria-label="뒤로">←</Link>
+				{/* 뒤로가기 없음 — owner 는 [수정하기], viewer 는 [나도 N빵 만들기],
+					둘 다 로고로 홈 이동 가능하므로 topbar back 은 중복 */}
 				<Link to="/">
 					<img className="topbar__logo" src={logo} alt="빵" />
 				</Link>
