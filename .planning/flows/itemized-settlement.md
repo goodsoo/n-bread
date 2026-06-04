@@ -27,10 +27,11 @@
 - **카피**: placeholder "예: 점심, 택시" · 입력칸 label 없이 placeholder 로만(공간 절약).
 
 ### 정산 결과 (`/result?d=` — `routes/Result.jsx`)
-- **신규 섹션 "항목별 내역"**: "송금 N번" + "각자 부담 정리" 아래.
-- **항목 카드(결제별)**: 헤더 = 결제 이름(없으면 "결제 N") · 결제자 "{이름}이 냈어요" · 총액. 본문 = 참가자별 "{이름} {분담액}" 목록. 올림이 있으면 결제자 옆에 "(+거스름 X원)" 또는 기존 올림 안내 재사용.
-- **상태**: 정상 / 금액 0 결제는 내역에서 제외(이미 noAmount 처리) / viewer·owner 동일(읽기 정보라 분기 무관).
-- **카피(확정)**: 섹션 제목 "항목별 내역"
+- **E = 사람별(per-person), 결제별 아님** — "내가 어디에 얼마 썼나" 욕구 해소. 별도 섹션이 아니라 **"각자 부담 정리" 행을 탭→펼치기**로 통합(순액과 상세가 한 곳, 중복 없음).
+- **펼친 내역**: 그 사람의 **쓴 내역**(참가한 결제별 분담액) + **낸 내역**(본인이 결제자인 결제의 올림 회수액). 항목명은 결제 이름(없으면 "결제 N").
+- **왜 둘 다**: `쓴 총액 − 낸 총액 = 순부담` 이 그대로 보여 "총액이 어떻게 나왔는지" 를 설명. 올림은 낸 내역의 회수액에 반영(기존 올림 안내와 정합).
+- **상태**: 정상 / 금액 0 결제 제외 / viewer·owner 동일(읽기 정보) / 쓴·낸 둘 다 없는 사람은 펼침 비활성.
+- **카피(확정)**: 행 펼침(별도 섹션 제목 없음) · 그룹 라벨 "쓴 내역"·"낸 내역"
 </screens>
 
 <backbone-map>
@@ -40,8 +41,8 @@
 |---|---|---|---|---|
 | 결제 이름 입력 | `Calculation.jsx` 결제 카드 | `payments[i].label` (state) | `newPayment` 에 `label:''` 추가 + `handleChangeLabel` | 신규 |
 | 이름을 데이터에 포함 | `Calculation.jsx:60,164` **수정** | — | draft·encode 매핑 `({payer,money,joins})` → **`({label,payer,money,joins})`** (현재 label 누락됨) | 신규(수정) |
-| 분담 계산 | — | — | **신규**: `lib/settle.js` `computeShares(payments)` → 결제별 `{label, payer, total, shares:[{id,amount}]}`. 올림 정책은 `computeBalances` 와 동일 재사용 | 신규 |
-| 항목별 내역 표시 | `Result.jsx` 신규 섹션 | — | `computeShares(payments)` 호출 | 신규 |
+| 분담 계산 | — | — | **신규**: `lib/settle.js` `computeShares`(결제별, 내부용) + `computePersonBreakdown(payments,count)`(사람별 consumed/paid 집계). 올림 정책은 `computeBalances` 와 동일 재사용 | 신규 |
+| 사람별 내역 펼침 | `Result.jsx` 각자 부담 정리 행 | `openRows`(펼친 사람 id) | `computePersonBreakdown` 호출 | 신규 |
 | decode 호환 | `share.js:33-45` | — | label 은 추가 필드라 기존 검증(names/payments 배열) 통과 — **하위호환 OK**(옛 링크엔 label 없음 → "결제 N") | 기존 |
 </backbone-map>
 
@@ -62,7 +63,8 @@
 
 - **Phase 1 — `computeShares`**: `lib/settle.js` 에 결제별 분담 순수함수 + vitest. Done: 균등·올림·금액0·비참가자 케이스 통과, 분담액 합/올림이 `computeBalances` 와 정합.
 - **Phase 2 — 결제 이름(D)**: `newPayment` label 추가 + 입력칸 + `handleChangeLabel` + **draft/encode 매핑에 label 포함**(현재 누락). Done: 이름 입력→draft·`d` 에 반영, 비우면 기존과 동일, 옛 링크 하위호환.
-- **Phase 3 — 항목별 내역(E)**: `Result.jsx` 신규 섹션, `computeShares` 사용, label·결제자·분담 표시. Done: 결제 2건+올림 케이스에서 내역이 순부담과 정합, 이름 없으면 "결제 N".
+- **Phase 3 — 사람별 펼침 내역(E)**: `computePersonBreakdown` + `Result.jsx` 각자 부담 정리 행 펼치기(쓴/낸 내역). Done: 쓴−낸=순부담 정합, 결제 2건+올림 케이스 검증, 이름 없으면 "결제 N", 토글 동작.
+  - **정정 이력**: 최초 결제별(per-payment)로 구현했다가 "사람별" 의도 확인 후 per-person 으로 교체(`computeShares` 섹션 제거 → `computePersonBreakdown` 펼침).
 - TDD: 각 phase 실패 테스트 먼저.
 </build-phases>
 
