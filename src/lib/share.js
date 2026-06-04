@@ -35,6 +35,18 @@ export function isSessionActive() {
 	}
 }
 
+/* 세션을 끝낸다 — 다음 입력 화면 진입을 "새 방문"으로 취급하게 한다.
+   홈 [N빵하기]는 새 정산 의도이므로, 같은 탭이어도 조용히 복원하지 않고
+   깨끗한 폼 + 복원 배너로 제안만 하도록 이 플래그를 지운다. */
+export function endSession() {
+	try {
+		sessionStorage.removeItem(SESSION_KEY);
+	}
+	catch {
+		/* 저장소 접근 불가(시크릿 등)면 어차피 세션도 없다 */
+	}
+}
+
 /* base64url (유니코드 이름 안전) */
 export function encodeData(data) {
 	const bytes = new TextEncoder().encode(JSON.stringify(data));
