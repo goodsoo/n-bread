@@ -90,6 +90,69 @@
 	font-weight: 700;
 }
 
+/* ── 항목별 내역 ─────────────────────────────── */
+
+.shareCard {
+	padding: .9rem 1.1rem;
+}
+
+.shareCard__head {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: .6rem;
+}
+
+.shareCard__title {
+	font-weight: 700;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.shareCard__total {
+	flex: 0 0 auto;
+	font-weight: 800;
+	color: var(--crust);
+}
+
+.shareCard__payer {
+	margin-top: .15rem;
+	font-size: .8rem;
+	color: var(--brown-500);
+}
+
+.shareCard__rows {
+	margin-top: .6rem;
+	border-top: 1px solid var(--line);
+}
+
+.shareCard__row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: .5rem 0;
+	border-bottom: 1px solid var(--line);
+}
+
+.shareCard__row:last-child {
+	border-bottom: none;
+}
+
+.shareCard__name {
+	font-size: .9rem;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.shareCard__amount {
+	flex: 0 0 auto;
+	font-size: .9rem;
+	font-weight: 600;
+	color: var(--brown-700);
+}
+
 /* ── 기타 ────────────────────────────────────── */
 
 .resultEmpty {

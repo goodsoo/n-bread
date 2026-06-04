@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import './Result.css';
 import logo from '../images/logo_after.png';
-import { settle } from '../lib/settle.js';
+import { computeShares, settle } from '../lib/settle.js';
 import { decodeData, saveDraft } from '../lib/share.js';
 import { hasHistory } from '../lib/history.js';
 
@@ -41,6 +41,7 @@ function Result() {
 
 	const { names, payments } = data;
 	const { balances, flows } = settle(names.length, payments);
+	const shares = computeShares(payments);
 
 	/* 입력 실수(금액 0)와 진짜 0원 정산을 구분한다 */
 	const noAmount = !payments.some((payment) => Number(payment.money) > 0);
@@ -127,6 +128,29 @@ function Result() {
 						</div>
 					))}
 				</div>
+			</>
+			}
+
+			{!noAmount && shares.length > 0 &&
+			<>
+				<div className="card__label card__label--section">항목별 내역</div>
+				{shares.map((s) => (
+					<div key={s.index} className="card shareCard">
+						<div className="shareCard__head">
+							<span className="shareCard__title">{s.label || `결제 ${s.index + 1}`}</span>
+							<span className="shareCard__total">{won(s.total)}</span>
+						</div>
+						<div className="shareCard__payer">{displayName(s.payer)}이 냈어요</div>
+						<div className="shareCard__rows">
+							{s.shares.map((sh) => (
+								<div key={sh.id} className="shareCard__row">
+									<span className="shareCard__name">{displayName(sh.id)}</span>
+									<span className="shareCard__amount">{won(sh.amount)}</span>
+								</div>
+							))}
+						</div>
+					</div>
+				))}
 			</>
 			}
 
