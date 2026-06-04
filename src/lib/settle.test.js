@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
 	computeBalances,
 	computeShares,
+	computePersonBreakdown,
 	partitionZeroSumSubsets,
 	computeFlows,
 	settle,
@@ -117,6 +118,58 @@ describe('computeShares', () => {
 				reconstructed[s.id] += s.amount;
 		}
 		expect(reconstructed).toEqual(balances);
+	});
+});
+
+describe('computePersonBreakdown', () => {
+	const payments = [
+		{ label: '점심', payer: 0, money: 36000, joins: [true, true, true] },
+		{ label: '택시', payer: 1, money: 10000, joins: [true, true, false] },
+	];
+
+	it('사람별로 쓴 내역(참가한 결제의 분담액)을 모은다', () => {
+		const b = computePersonBreakdown(payments, 3);
+		/* 민수(0): 점심 12000 + 택시 5000 */
+		expect(b[0].consumed).toEqual([
+			{ index: 0, label: '점심', amount: 12000 },
+			{ index: 1, label: '택시', amount: 5000 },
+		]);
+		expect(b[0].consumedTotal).toBe(17000);
+		/* 철수(2): 점심만 */
+		expect(b[2].consumed).toEqual([{ index: 0, label: '점심', amount: 12000 }]);
+	});
+
+	it('사람별로 낸 내역(본인이 결제자인 결제)을 모은다', () => {
+		const b = computePersonBreakdown(payments, 3);
+		expect(b[0].paid).toEqual([{ index: 0, label: '점심', amount: 36000 }]);
+		expect(b[0].paidTotal).toBe(36000);
+		/* 철수(2): 낸 것 없음 */
+		expect(b[2].paid).toEqual([]);
+		expect(b[2].paidTotal).toBe(0);
+	});
+
+	it('쓴 총액 − 낸 총액 = computeBalances 순부담 (총액 도출 정합)', () => {
+		const balances = computeBalances(3, payments);
+		const b = computePersonBreakdown(payments, 3);
+		for (let i = 0; i < 3; i++)
+			expect(b[i].consumedTotal - b[i].paidTotal).toBe(balances[i]);
+	});
+
+	it('올림 결제도 정합한다 (낸 금액은 올림된 회수액)', () => {
+		const odd = [{ label: '', payer: 0, money: 1000, joins: [true, true, true] }];
+		const balances = computeBalances(3, odd);
+		const b = computePersonBreakdown(odd, 3);
+		/* 결제자는 올림된 1002 를 회수, 각자 334 씩 사용 */
+		expect(b[0].paid).toEqual([{ index: 0, label: '', amount: 1002 }]);
+		expect(b[0].consumed[0].amount).toBe(334);
+		for (let i = 0; i < 3; i++)
+			expect(b[i].consumedTotal - b[i].paidTotal).toBe(balances[i]);
+	});
+
+	it('아무 것도 안 쓰고 안 낸 사람은 빈 내역', () => {
+		const b = computePersonBreakdown([{ payer: 0, money: 1000, joins: [true, true, false] }], 3);
+		expect(b[2].consumed).toEqual([]);
+		expect(b[2].paid).toEqual([]);
 	});
 });
 

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import './Result.css';
 import logo from '../images/logo_after.png';
-import { computeShares, settle } from '../lib/settle.js';
+import { computePersonBreakdown, settle } from '../lib/settle.js';
 import { decodeData, saveDraft } from '../lib/share.js';
 import { hasHistory } from '../lib/history.js';
 
@@ -12,6 +12,10 @@ function Result() {
 	const [searchParams] = useSearchParams();
 	const [copied, setCopied] = useState(false);
 	const [copyFailed, setCopyFailed] = useState(false);
+	/* 각자 부담 정리에서 펼쳐 본 사람들 — "내가 어디에 얼마 썼나" 를 행 안에서 본다 */
+	const [openRows, setOpenRows] = useState([]);
+	const toggleRow = (id) =>
+		setOpenRows((open) => (open.includes(id) ? open.filter((x) => x !== id) : [...open, id]));
 	const d = searchParams.get('d') ?? '';
 	const data = decodeData(d);
 
@@ -41,7 +45,7 @@ function Result() {
 
 	const { names, payments } = data;
 	const { balances, flows } = settle(names.length, payments);
-	const shares = computeShares(payments);
+	const breakdown = computePersonBreakdown(payments, names.length);
 
 	/* 입력 실수(금액 0)와 진짜 0원 정산을 구분한다 */
 	const noAmount = !payments.some((payment) => Number(payment.money) > 0);
@@ -113,44 +117,64 @@ function Result() {
 			<>
 				<div className="card__label card__label--section">각자 부담 정리</div>
 				<div className="card balanceCard">
-					{names.map((_, id) => (
+					{names.map((_, id) => {
+						const b = breakdown[id];
+						const hasDetail = b.consumed.length > 0 || b.paid.length > 0;
+						const open = openRows.includes(id);
+						return (
 						<div key={id} className="balanceRow">
-							<span className="balanceRow__name">{displayName(id)}</span>
-							{balances[id] > 0 &&
-							<span className="balanceRow__amount balanceRow__amount--send">{won(balances[id])} 보내요</span>
-							}
-							{balances[id] < 0 &&
-							<span className="balanceRow__amount balanceRow__amount--receive">{won(-balances[id])} 받아요</span>
-							}
-							{balances[id] === 0 &&
-							<span className="balanceRow__amount">정산 끝!</span>
-							}
-						</div>
-					))}
-				</div>
-			</>
-			}
-
-			{!noAmount && shares.length > 0 &&
-			<>
-				<div className="card__label card__label--section">항목별 내역</div>
-				{shares.map((s) => (
-					<div key={s.index} className="card shareCard">
-						<div className="shareCard__head">
-							<span className="shareCard__title">{s.label || `결제 ${s.index + 1}`}</span>
-							<span className="shareCard__total">{won(s.total)}</span>
-						</div>
-						<div className="shareCard__payer">{displayName(s.payer)}이 냈어요</div>
-						<div className="shareCard__rows">
-							{s.shares.map((sh) => (
-								<div key={sh.id} className="shareCard__row">
-									<span className="shareCard__name">{displayName(sh.id)}</span>
-									<span className="shareCard__amount">{won(sh.amount)}</span>
+							{/* 행을 탭하면 그 사람이 어디에 얼마 썼고 무엇을 냈는지 펼친다 */}
+							<button
+								className="balanceRow__head"
+								onClick={() => hasDetail && toggleRow(id)}
+								aria-expanded={hasDetail ? open : undefined}
+								disabled={!hasDetail}>
+								<span className="balanceRow__name">{displayName(id)}</span>
+								<span className="balanceRow__right">
+									{balances[id] > 0 &&
+									<span className="balanceRow__amount balanceRow__amount--send">{won(balances[id])} 보내요</span>
+									}
+									{balances[id] < 0 &&
+									<span className="balanceRow__amount balanceRow__amount--receive">{won(-balances[id])} 받아요</span>
+									}
+									{balances[id] === 0 &&
+									<span className="balanceRow__amount">정산 끝!</span>
+									}
+									{hasDetail &&
+									<span className={`balanceRow__chevron${open ? ' balanceRow__chevron--open' : ''}`}>▾</span>
+									}
+								</span>
+							</button>
+							{open &&
+							<div className="balanceDetail">
+								{b.consumed.length > 0 &&
+								<div className="balanceDetail__group">
+									<div className="balanceDetail__label">쓴 내역</div>
+									{b.consumed.map((it) => (
+										<div key={`c${it.index}`} className="balanceDetail__row">
+											<span className="balanceDetail__name">{it.label || `결제 ${it.index + 1}`}</span>
+											<span className="balanceDetail__amount">{won(it.amount)}</span>
+										</div>
+									))}
 								</div>
-							))}
+								}
+								{b.paid.length > 0 &&
+								<div className="balanceDetail__group">
+									<div className="balanceDetail__label">낸 내역</div>
+									{b.paid.map((it) => (
+										<div key={`p${it.index}`} className="balanceDetail__row">
+											<span className="balanceDetail__name">{it.label || `결제 ${it.index + 1}`}</span>
+											<span className="balanceDetail__amount balanceDetail__amount--paid">{won(it.amount)}</span>
+										</div>
+									))}
+								</div>
+								}
+							</div>
+							}
 						</div>
-					</div>
-				))}
+						);
+					})}
+				</div>
 			</>
 			}
 

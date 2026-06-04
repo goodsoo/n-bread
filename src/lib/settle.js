@@ -87,6 +87,38 @@ export function computeShares(payments) {
 	return result;
 }
 
+/**
+ * 사람별 내역을 구한다 — "내가 어디에 얼마를 썼고, 무엇을 냈나" 를 펼쳐 보기 위한 것.
+ *
+ * computeShares 를 사람 축으로 뒤집는다:
+ * - consumed: 그 사람이 참가한 결제들의 분담액(올림된 share)
+ * - paid:     그 사람이 결제자인 결제들의 회수액(올림된 rounded)
+ *
+ * consumedTotal − paidTotal 은 computeBalances 의 순부담과 정확히 일치한다
+ * (balances[i] = Σ참가 share − Σ결제 rounded). 그래서 펼친 내역이 "총액이
+ * 어떻게 나왔는지" 를 그대로 설명한다.
+ *
+ * @param {{label?: string, payer: number, money: number|string, joins: boolean[]}[]} payments
+ * @param {number} count 전체 인원 수
+ * @returns {{id:number,consumed:{index:number,label:string,amount:number}[],paid:{index:number,label:string,amount:number}[],consumedTotal:number,paidTotal:number}[]}
+ */
+export function computePersonBreakdown(payments, count) {
+	const result = Array.from({ length: count }, (_, id) => ({
+		id, consumed: [], paid: [], consumedTotal: 0, paidTotal: 0,
+	}));
+
+	for (const p of computeShares(payments)) {
+		for (const s of p.shares) {
+			result[s.id].consumed.push({ index: p.index, label: p.label, amount: s.amount });
+			result[s.id].consumedTotal += s.amount;
+		}
+		result[p.payer].paid.push({ index: p.index, label: p.label, amount: p.rounded });
+		result[p.payer].paidTotal += p.rounded;
+	}
+
+	return result;
+}
+
 /* k 개짜리 조합을 사전순으로 순회하는 generator */
 function* combinations(n, k) {
 	const combo = Array.from({ length: k }, (_, i) => i);
