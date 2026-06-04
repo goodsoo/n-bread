@@ -1,0 +1,71 @@
+/* ── 지난 정산 목록 ──────────────────────────── */
+
+.historyEmpty {
+	text-align: center;
+	line-height: 1.6;
+	padding: 1.6rem 1.1rem;
+	color: var(--brown-500);
+}
+
+.historyList {
+	display: flex;
+	flex-direction: column;
+	gap: .6rem;
+}
+
+.historyItem {
+	display: flex;
+	align-items: stretch;
+	gap: .4rem;
+	padding: 0;
+	overflow: hidden;
+}
+
+.historyItem__main {
+	flex: 1;
+	display: block;
+	padding: .9rem 1.1rem;
+	text-decoration: none;
+	color: inherit;
+}
+
+.historyItem__top {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: .6rem;
+}
+
+.historyItem__date {
+	font-size: .8rem;
+	color: var(--brown-300);
+}
+
+.historyItem__total {
+	font-weight: 800;
+	color: var(--crust);
+}
+
+.historyItem__meta {
+	margin-top: .25rem;
+	font-size: .85rem;
+	color: var(--brown-500);
+}
+
+.historyItem__remove {
+	flex: 0 0 auto;
+	padding: 0 1rem;
+	font-size: .8rem;
+	color: var(--brown-300);
+	border-left: 1px solid var(--line);
+	border-radius: 0;
+}
+
+.historyItem__remove:hover {
+	color: var(--brown-700);
+	background: var(--crust-soft);
+}
+
+.historyCta {
+	margin-top: 1.4rem;
+}

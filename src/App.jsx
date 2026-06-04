@@ -3,6 +3,7 @@ import Home from './routes/Home.jsx';
 import About from './routes/About.jsx';
 import Calculation from './routes/Calculation.jsx';
 import Result from './routes/Result.jsx';
+import History from './routes/History.jsx';
 import './App.css';
 
 /* 구버전(gh-pages)과 같은 #/ URL 구조를 유지한다 */
@@ -14,6 +15,7 @@ function App() {
 				<Route path="/about" element={<About />} />
 				<Route path="/calculation" element={<Calculation />} />
 				<Route path="/result" element={<Result />} />
+				<Route path="/history" element={<History />} />
 			</Routes>
 		</HashRouter>
 	);

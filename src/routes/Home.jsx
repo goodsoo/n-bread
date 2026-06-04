@@ -1,8 +1,11 @@
 import { Link } from 'react-router-dom';
 import './Home.css';
 import logo from '../images/logo.png';
+import { listHistory } from '../lib/history.js';
 
 function Home() {
+	const hasHistory = listHistory().length > 0;
+
 	return (
 		<div className="page home">
 			<img className="home__logo" src={logo} alt="N빵" />
@@ -18,6 +21,11 @@ function Home() {
 				<Link className="btn btn--primary" to="/calculation">
 					N빵하기
 				</Link>
+				{hasHistory &&
+				<Link className="btn btn--ghost" to="/history">
+					지난 정산
+				</Link>
+				}
 				<Link className="btn btn--ghost" to="/about">
 					만든이
 				</Link>
