@@ -19,28 +19,36 @@ export const MAX_PEOPLE = 20;
  * 예) 3명이서 1000원 → 각자 334원, 결제자가 받을 돈 668원.
  *
  * @param {number} count 전체 인원 수
- * @param {{payer: number, money: number|string, joins: boolean[]}[]} payments
+ * @param {{payer: number, money: number|string, joins: boolean[], refund?: boolean}[]} payments
  * @returns {number[]} 인원별 순 지불액 (합은 항상 0)
  */
 export function computeBalances(count, payments) {
 	const balances = new Array(count).fill(0);
 
-	for (const { payer, money, joins } of payments) {
+	for (const { payer, money, joins, refund } of payments) {
 		const joinCount = joins.filter(Boolean).length;
-		let amount = Math.floor(Number(money)) || 0;
-		if (joinCount === 0 || amount <= 0)
+		const raw = Math.floor(Number(money)) || 0;
+		const mag = Math.abs(raw);
+		if (joinCount === 0 || mag === 0)
 			continue;
 
+		/* 취소분(refund) = 이미 정산했던 결제의 환불. 금액은 양수로 입력받고 이
+			 플래그로 부호만 뒤집어, 정상 결제의 정확한 역으로 처리한다(올림은
+			 절댓값 기준). 그래야 결제 X 와 취소 X 가 정확히 상쇄되고 잔액 합 0
+			 불변식이 유지된다. (음수 money 는 옛 링크 호환용) */
+		const sign = (refund ? -1 : 1) * (raw < 0 ? -1 : 1);
+
 		/* 나누어 떨어지지 않으면 올림해서 보내기로 한다 */
-		const rest = amount % joinCount;
+		let rounded = mag;
+		const rest = rounded % joinCount;
 		if (rest !== 0)
-			amount += joinCount - rest;
-		const share = amount / joinCount;
+			rounded += joinCount - rest;
+		const share = sign * (rounded / joinCount);
 
-		/* 결제자는 (올림된) 사용 금액만큼 제외 */
-		balances[payer] -= amount;
+		/* 결제자는 (올림된) 사용 금액만큼 제외 (취소분이면 회수분을 반환) */
+		balances[payer] -= sign * rounded;
 
-		/* N등분하여 각 참가자의 지불액에 추가 */
+		/* N등분하여 각 참가자의 지불액에 추가 (취소분이면 각자 credit) */
 		for (let i = 0; i < joins.length; i++)
 			if (joins[i])
 				balances[i] += share;
@@ -58,23 +66,27 @@ export function computeBalances(count, payments) {
  * 금액 0·빈 결제, N빵 대상 0명인 결제는 내역에서 제외한다.
  * 원래 결제 위치(index)를 보존해 "결제 N" 표시에 쓴다.
  *
- * @param {{label?: string, payer: number, money: number|string, joins: boolean[]}[]} payments
+ * @param {{label?: string, payer: number, money: number|string, joins: boolean[], refund?: boolean}[]} payments
  * @returns {{index:number,label:string,payer:number,total:number,rounded:number,share:number,shares:{id:number,amount:number}[]}[]}
  */
 export function computeShares(payments) {
 	const result = [];
 
 	payments.forEach((payment, index) => {
-		const { payer, money, joins, label } = payment;
+		const { payer, money, joins, label, refund } = payment;
 		const joinCount = joins.filter(Boolean).length;
-		const total = Math.floor(Number(money)) || 0;
-		if (joinCount === 0 || total <= 0)
+		const raw = Math.floor(Number(money)) || 0;
+		const mag = Math.abs(raw);
+		if (joinCount === 0 || mag === 0)
 			return;
 
-		/* computeBalances 와 같은 올림 */
-		const rest = total % joinCount;
-		const rounded = rest === 0 ? total : total + (joinCount - rest);
-		const share = rounded / joinCount;
+		/* computeBalances 와 같은 올림 — 취소분(refund)은 절댓값 올림 + 부호 반대 */
+		const sign = (refund ? -1 : 1) * (raw < 0 ? -1 : 1);
+		const total = sign * mag;
+		const restMag = mag % joinCount;
+		const roundedMag = restMag === 0 ? mag : mag + (joinCount - restMag);
+		const rounded = sign * roundedMag;
+		const share = sign * (roundedMag / joinCount);
 
 		const shares = [];
 		for (let i = 0; i < joins.length; i++)

@@ -255,6 +255,116 @@ describe('computeFlows', () => {
 	});
 });
 
+describe('음수 금액 (취소·환불)', () => {
+	it('음수 결제는 양수 결제의 정확한 역이다 — +X 와 -X 가 상쇄된다', () => {
+		const balances = computeBalances(3, [
+			{ payer: 0, money: 36000, joins: allJoin(3) },
+			{ payer: 0, money: -36000, joins: allJoin(3) },
+		]);
+		expect(balances).toEqual([0, 0, 0]);
+	});
+
+	it('올림이 있는 금액도 +X 와 -X 가 정확히 상쇄된다 (절댓값 올림)', () => {
+		const balances = computeBalances(3, [
+			{ payer: 0, money: 1000, joins: allJoin(3) },
+			{ payer: 0, money: -1000, joins: allJoin(3) },
+		]);
+		expect(balances).toEqual([0, 0, 0]);
+	});
+
+	it('취소분만 남으면 결제자가 돌려주고 참가자가 돌려받는다', () => {
+		/* 3명 3000원 결제가 통째로 취소 — 결제자(0)가 2000 돌려주고, 1·2 가 1000 씩 받는다 */
+		const balances = computeBalances(3, [
+			{ payer: 0, money: -3000, joins: allJoin(3) },
+		]);
+		expect(balances).toEqual([2000, -1000, -1000]);
+	});
+
+	it('부분 취소: 결제 후 일부 환불이면 순액으로 정산된다', () => {
+		const balances = computeBalances(2, [
+			{ payer: 0, money: 10000, joins: allJoin(2) },
+			{ payer: 0, money: -4000, joins: allJoin(2) },
+		]);
+		/* 순 6000 을 2명이 N빵 → 각자 3000, 결제자 6000 회수 */
+		expect(balances).toEqual([-3000, 3000]);
+	});
+
+	it('잔액의 합은 음수가 섞여도 0 이다', () => {
+		const balances = computeBalances(4, [
+			{ payer: 0, money: 12345, joins: [true, true, true, false] },
+			{ payer: 2, money: -6789, joins: [false, true, true, true] },
+			{ payer: 3, money: 555, joins: allJoin(4) },
+		]);
+		expect(balances.reduce((a, b) => a + b, 0)).toBe(0);
+	});
+
+	it('computeShares 도 음수를 부호 반대·절댓값 올림으로 낸다', () => {
+		const shares = computeShares([
+			{ payer: 0, money: -1000, joins: allJoin(3) },
+		]);
+		expect(shares[0]).toMatchObject({ total: -1000, rounded: -1002, share: -334 });
+		expect(shares[0].shares.map((s) => s.amount)).toEqual([-334, -334, -334]);
+	});
+
+	it('음수 섞인 내역도 computeShares 가 computeBalances 와 정합한다', () => {
+		const payments = [
+			{ payer: 0, money: 36000, joins: allJoin(3) },
+			{ payer: 1, money: -9000, joins: [true, true, false] },
+		];
+		const balances = computeBalances(3, payments);
+		const reconstructed = new Array(3).fill(0);
+		for (const p of computeShares(payments)) {
+			reconstructed[p.payer] -= p.rounded;
+			for (const s of p.shares)
+				reconstructed[s.id] += s.amount;
+		}
+		expect(reconstructed).toEqual(balances);
+	});
+
+	it('취소가 섞인 정산도 송금이 잔액을 정확히 0 으로 만든다', () => {
+		const payments = [
+			{ payer: 0, money: 40000, joins: allJoin(4) },
+			{ payer: 1, money: -12000, joins: [true, true, true, false] },
+		];
+		const { balances, flows } = settle(4, payments);
+		expect(balances.reduce((a, b) => a + b, 0)).toBe(0);
+		const after = [...balances];
+		for (const { from, to, money } of flows) {
+			expect(money).toBeGreaterThan(0);
+			after[from] -= money;
+			after[to] += money;
+		}
+		expect(after.every((m) => m === 0)).toBe(true);
+	});
+});
+
+describe('취소분 플래그 (refund)', () => {
+	it('refund 플래그는 양수 금액을 음수처럼 뺀다 (양수 입력 유지)', () => {
+		const flagged = computeBalances(3, [{ payer: 0, money: 3000, refund: true, joins: allJoin(3) }]);
+		const negative = computeBalances(3, [{ payer: 0, money: -3000, joins: allJoin(3) }]);
+		expect(flagged).toEqual(negative);
+		expect(flagged).toEqual([2000, -1000, -1000]);
+	});
+
+	it('결제 X 와 취소분 X 는 정확히 상쇄된다 (올림 포함)', () => {
+		const balances = computeBalances(3, [
+			{ payer: 0, money: 1000, joins: allJoin(3) },
+			{ payer: 0, money: 1000, refund: true, joins: allJoin(3) },
+		]);
+		expect(balances).toEqual([0, 0, 0]);
+	});
+
+	it('computeShares 도 refund 를 부호 반대로 낸다', () => {
+		const shares = computeShares([{ payer: 0, money: 1000, refund: true, joins: allJoin(3) }]);
+		expect(shares[0]).toMatchObject({ total: -1000, rounded: -1002, share: -334 });
+	});
+
+	it('refund=false 는 정상 결제와 같다', () => {
+		const off = computeBalances(3, [{ payer: 0, money: 3000, refund: false, joins: allJoin(3) }]);
+		expect(off).toEqual([-2000, 1000, 1000]);
+	});
+});
+
 describe('settle (통합)', () => {
 	it('여행 시나리오: 결제 3건, 4명 — 송금 흐름이 잔액을 정확히 0 으로 만든다', () => {
 		const payments = [

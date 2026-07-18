@@ -13,6 +13,7 @@ const newPayment = (pid, number) => ({
 	label: '',
 	payer: 0,
 	money: '',
+	refund: false,
 	joins: new Array(number).fill(true),
 });
 
@@ -24,7 +25,7 @@ const withPids = (payments) =>
 const hasContent = (draft) =>
 	draft !== null && (
 		draft.names.some((name) => name !== '')
-		|| draft.payments.some((payment) => Number(payment.money) > 0)
+		|| draft.payments.some((payment) => Number(payment.money) !== 0)
 		|| draft.names.length > MIN_PEOPLE
 		|| draft.payments.length > 1
 	);
@@ -73,7 +74,7 @@ function Calculation() {
 			return;
 		saveDraft({
 			names,
-			payments: payments.map(({ label, payer, money, joins }) => ({ label, payer, money, joins })),
+			payments: payments.map(({ label, payer, money, refund, joins }) => ({ label, payer, money, refund, joins })),
 		});
 	}, [names, payments, pendingDraft]);
 
@@ -140,8 +141,19 @@ function Calculation() {
 	};
 
 	const handleChangeMoney = (pid, value) => {
+		/* 금액칸은 0/양수만 — 취소분은 아래 [취소분] 토글로 표시한다.
+			 (음수 부호가 끼어들면 제거) */
+		const clean = value.replace(/-/g, '');
 		setPayments(payments.map((payment) =>
-			payment.pid === pid ? { ...payment, money: value } : payment));
+			payment.pid === pid ? { ...payment, money: clean } : payment));
+		setSubmitMsg('');
+		touch();
+	};
+
+	/* 이미 정산했던 결제의 취소·환불 표시 — 금액은 양수 그대로 두고 정산에서 뺀다 */
+	const handleToggleRefund = (pid) => {
+		setPayments(payments.map((payment) =>
+			payment.pid === pid ? { ...payment, refund: !payment.refund } : payment));
 		setSubmitMsg('');
 		touch();
 	};
@@ -179,14 +191,15 @@ function Calculation() {
 	};
 
 	const handleSubmit = () => {
-		/* 입력 실수를 결과 화면("정산할 게 없네요")으로 보내지 않는다 */
-		if (!payments.some((payment) => Number(payment.money) > 0)) {
+		/* 입력 실수를 결과 화면("정산할 게 없네요")으로 보내지 않는다.
+			 음수(취소·환불)도 유효한 금액이므로 0 이 아니기만 하면 된다 */
+		if (!payments.some((payment) => Math.floor(Number(payment.money)) !== 0)) {
 			setSubmitMsg('결제 금액을 입력해 주세요.');
 			return;
 		}
 		const data = {
 			names,
-			payments: payments.map(({ label, payer, money, joins }) => ({ label, payer, money, joins })),
+			payments: payments.map(({ label, payer, money, refund, joins }) => ({ label, payer, money, refund, joins })),
 		};
 		const d = encodeData(data);
 		/* 기록 = 지난 정산 목록의 저장소이자, 결과 화면 owner 판별 근거 */
@@ -194,7 +207,7 @@ function Calculation() {
 			d,
 			createdAt: Date.now(),
 			peopleCount: names.length,
-			total: data.payments.reduce((sum, { money }) => sum + (Math.floor(Number(money)) || 0), 0),
+			total: data.payments.reduce((sum, { money, refund }) => sum + (refund ? -1 : 1) * (Math.floor(Number(money)) || 0), 0),
 			flowCount: settle(names.length, data.payments).flows.length,
 		});
 		/* 완료된 정산은 history 에 있으므로 draft 는 비운다 — 다음 N빵하기 때
@@ -268,12 +281,21 @@ function Calculation() {
 				<div key={payment.pid} className="card paymentCard">
 					<div className="paymentCard__head">
 						<span className="paymentCard__index">결제 {idx + 1}</span>
-						{payments.length > 1 &&
-						<button
-							className="btn paymentCard__delete"
-							aria-label="결제 삭제"
-							onClick={() => handleDeletePayment(payment.pid)}>✕</button>
-						}
+						<div className="paymentCard__headActions">
+							{/* 이미 정산했던 결제의 취소·환불 — 켜면 이 금액을 정산에서 뺀다 */}
+							<button
+								className={`btn paymentCard__refund${payment.refund ? ' paymentCard__refund--on' : ''}`}
+								aria-pressed={payment.refund}
+								onClick={() => handleToggleRefund(payment.pid)}>
+								취소분
+							</button>
+							{payments.length > 1 &&
+							<button
+								className="btn paymentCard__delete"
+								aria-label="결제 삭제"
+								onClick={() => handleDeletePayment(payment.pid)}>✕</button>
+							}
+						</div>
 					</div>
 					{/* 선택적 결제 이름 — 비우면 "결제 N" 으로 동작·표시 (D) */}
 					<input
@@ -309,7 +331,10 @@ function Calculation() {
 						</label>
 						<label className="fieldGroup">
 							<span className="fieldGroup__label">얼마였나요?</span>
-							<div className="moneyField">
+							<div className={`moneyField${payment.refund ? ' moneyField--refund' : ''}`}>
+								{payment.refund &&
+								<span className="moneyField__minus" aria-hidden="true">−</span>
+								}
 								<input
 									ref={(el) => {
 										if (el)
@@ -320,6 +345,7 @@ function Calculation() {
 									className="field"
 									type="number"
 									inputMode="numeric"
+									min="0"
 									placeholder="0"
 									value={payment.money}
 									autoComplete="off"

@@ -133,6 +133,31 @@
 	color: var(--crust);
 }
 
+.paymentCard__headActions {
+	display: flex;
+	align-items: center;
+	gap: .2rem;
+	flex: 0 0 auto;
+}
+
+/* 취소분 토글 — 켜면 이 결제 금액을 정산에서 뺀다 */
+.paymentCard__refund {
+	min-height: 32px;
+	padding: .35rem .7rem;
+	border-radius: 999px;
+	background: transparent;
+	border: 1.5px solid var(--brown-300);
+	color: var(--brown-500);
+	font-size: .8rem;
+	font-weight: 700;
+}
+
+.paymentCard__refund--on {
+	background: #b03a2e;
+	border-color: #b03a2e;
+	color: #fff;
+}
+
 .paymentCard__delete {
 	display: flex;
 	align-items: center;
@@ -200,6 +225,24 @@
 	transform: translateY(-50%);
 	color: var(--brown-500);
 	font-size: .9rem;
+	pointer-events: none;
+}
+
+/* 취소분: 금액을 뺀다는 걸 색·부호로 드러낸다 (입력값 자체는 양수) */
+.moneyField--refund input {
+	color: #b03a2e;
+	font-weight: 700;
+	padding-left: 1.6rem;
+}
+
+.moneyField__minus {
+	position: absolute;
+	left: .8rem;
+	top: 50%;
+	transform: translateY(-50%);
+	color: #b03a2e;
+	font-size: 1.05rem;
+	font-weight: 800;
 	pointer-events: none;
 }
 
