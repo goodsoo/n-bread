@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Calculation.css';
 import logo from '../images/logo_before.png';
@@ -51,6 +51,20 @@ function Calculation() {
 	const [submitMsg, setSubmitMsg] = useState('');
 
 	const number = names.length;
+
+	/* 결제 카드 입력에 pid 로 접근하기 위한 ref map (동적 목록이라 콜백 ref 로 등록) */
+	const labelRefs = useRef(new Map());
+	const moneyRefs = useRef(new Map());
+	/* 새로 추가된 카드의 메모칸으로 옮길 focus 대상 pid */
+	const [focusPid, setFocusPid] = useState(null);
+
+	/* 카드가 렌더된 뒤(ref 부착 완료) 새 카드의 메모칸으로 focus */
+	useEffect(() => {
+		if (focusPid === null)
+			return;
+		labelRefs.current.get(focusPid)?.focus();
+		setFocusPid(null);
+	}, [focusPid]);
 
 	/* 새로고침해도 입력이 날아가지 않도록 draft 를 보존한다.
 		 단, 복원 배너가 떠 있는 동안은 지난 draft 를 덮어쓰지 않는다. */
@@ -152,6 +166,8 @@ function Calculation() {
 	const handleAddPayment = () => {
 		const nextPid = payments[payments.length - 1].pid + 1;
 		setPayments([...payments, newPayment(nextPid, number)]);
+		/* 새 카드가 렌더되면 메모칸으로 자동 focus */
+		setFocusPid(nextPid);
 		touch();
 	};
 
@@ -261,11 +277,24 @@ function Calculation() {
 					</div>
 					{/* 선택적 결제 이름 — 비우면 "결제 N" 으로 동작·표시 (D) */}
 					<input
+						ref={(el) => {
+							if (el)
+								labelRefs.current.set(payment.pid, el);
+							else
+								labelRefs.current.delete(payment.pid);
+						}}
 						className="field paymentCard__label"
 						placeholder="예: 점심, 택시"
 						autoComplete="off"
 						value={payment.label}
-						onChange={(e) => handleChangeLabel(payment.pid, e.target.value)} />
+						onChange={(e) => handleChangeLabel(payment.pid, e.target.value)}
+						onKeyDown={(e) => {
+							/* 메모 입력 후 확인(Enter)하면 같은 카드의 금액칸으로 이동 */
+							if (e.key === 'Enter') {
+								e.preventDefault();
+								moneyRefs.current.get(payment.pid)?.focus();
+							}
+						}} />
 					<div className="paymentCard__row">
 						<label className="fieldGroup">
 							<span className="fieldGroup__label">누가 냈나요?</span>
@@ -282,6 +311,12 @@ function Calculation() {
 							<span className="fieldGroup__label">얼마였나요?</span>
 							<div className="moneyField">
 								<input
+									ref={(el) => {
+										if (el)
+											moneyRefs.current.set(payment.pid, el);
+										else
+											moneyRefs.current.delete(payment.pid);
+									}}
 									className="field"
 									type="number"
 									inputMode="numeric"
