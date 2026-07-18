@@ -49,13 +49,13 @@ function Result() {
 	const breakdown = computePersonBreakdown(payments, names.length);
 
 	/* 입력 실수(금액 0)와 진짜 0원 정산을 구분한다 */
-	const noAmount = !payments.some((payment) => Number(payment.money) > 0);
+	const noAmount = !payments.some((payment) => Math.floor(Number(payment.money)) !== 0);
 
 	/* 올림이 발생한 결제가 있으면 "왜 1,000원이 아니지?" 를 설명한다 */
 	const hasRounding = payments.some((payment) => {
 		const joinCount = payment.joins.filter(Boolean).length;
 		const amount = Math.floor(Number(payment.money)) || 0;
-		return joinCount > 0 && amount > 0 && amount % joinCount !== 0;
+		return joinCount > 0 && amount !== 0 && Math.abs(amount) % joinCount !== 0;
 	});
 
 	const displayName = (id) => (names[id] === '' ? `사람${id + 1}` : names[id]);
@@ -147,30 +147,42 @@ function Result() {
 									<span className="balanceRow__amount">정산 끝!</span>
 									}
 									{hasDetail &&
-									<span className={`balanceRow__chevron${open ? ' balanceRow__chevron--open' : ''}`}>▾</span>
+									<svg
+										className={`balanceRow__chevron${open ? ' balanceRow__chevron--open' : ''}`}
+										width="20" height="20" viewBox="0 0 24 24" fill="none"
+										stroke="currentColor" strokeWidth="2.5"
+										strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+										<path d="M6 9l6 6 6-6" />
+									</svg>
 									}
 								</span>
 							</button>
 							{open &&
 							<div className="balanceDetail">
-								{b.consumed.length > 0 &&
-								<div className="balanceDetail__group">
-									<div className="balanceDetail__label">쓴 내역</div>
-									{b.consumed.map((it) => (
-										<div key={`c${it.index}`} className="balanceDetail__row">
-											<span className="balanceDetail__name">{it.label || `결제 ${it.index + 1}`}</span>
-											<span className="balanceDetail__amount">{won(it.amount)}</span>
-										</div>
-									))}
-								</div>
-								}
 								{b.paid.length > 0 &&
 								<div className="balanceDetail__group">
-									<div className="balanceDetail__label">낸 내역</div>
+									<div className="balanceDetail__groupHead">
+										<span className="balanceDetail__label">낸돈</span>
+										<span className="balanceDetail__total balanceDetail__total--paid">{won(b.paidTotal)}</span>
+									</div>
 									{b.paid.map((it) => (
 										<div key={`p${it.index}`} className="balanceDetail__row">
 											<span className="balanceDetail__name">{it.label || `결제 ${it.index + 1}`}</span>
 											<span className="balanceDetail__amount balanceDetail__amount--paid">{won(it.amount)}</span>
+										</div>
+									))}
+								</div>
+								}
+								{b.consumed.length > 0 &&
+								<div className="balanceDetail__group">
+									<div className="balanceDetail__groupHead">
+										<span className="balanceDetail__label">쓴돈</span>
+										<span className="balanceDetail__total">{won(b.consumedTotal)}</span>
+									</div>
+									{b.consumed.map((it) => (
+										<div key={`c${it.index}`} className="balanceDetail__row">
+											<span className="balanceDetail__name">{it.label || `결제 ${it.index + 1}`}</span>
+											<span className="balanceDetail__amount">{won(it.amount)}</span>
 										</div>
 									))}
 								</div>

@@ -106,8 +106,9 @@
 }
 
 .balanceRow__chevron {
-	color: var(--brown-300);
-	font-size: .8rem;
+	display: block;
+	flex: 0 0 auto;
+	color: var(--brown-500);
 	transition: transform .15s ease;
 }
 
@@ -129,14 +130,35 @@
 }
 
 .balanceDetail__group + .balanceDetail__group {
-	margin-top: .5rem;
+	margin-top: .6rem;
+}
+
+/* 낸돈/쓴돈 목록 위의 헤더 — 라벨 + 합계금액을 한 줄에 */
+.balanceDetail__groupHead {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: .6rem;
+	padding-bottom: .2rem;
+	margin-bottom: .2rem;
+	border-bottom: 1px dashed var(--line);
 }
 
 .balanceDetail__label {
-	font-size: .72rem;
+	font-size: .78rem;
 	font-weight: 700;
-	color: var(--brown-300);
-	margin-bottom: .15rem;
+	color: var(--brown-500);
+}
+
+.balanceDetail__total {
+	flex: 0 0 auto;
+	font-size: .85rem;
+	font-weight: 800;
+	color: var(--brown-700);
+}
+
+.balanceDetail__total--paid {
+	color: var(--green);
 }
 
 .balanceDetail__row {
