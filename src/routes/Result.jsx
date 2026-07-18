@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import './Result.css';
 import logo from '../images/logo_after.png';
 import { computePersonBreakdown, settle } from '../lib/settle.js';
-import { decodeData, formatResultText, saveDraft } from '../lib/share.js';
+import { copyText, decodeData, formatResultText, saveDraft } from '../lib/share.js';
 import { hasHistory } from '../lib/history.js';
 
 const won = (n) => `${n.toLocaleString('ko-KR')}원`;
@@ -61,14 +61,13 @@ function Result() {
 	const displayName = (id) => (names[id] === '' ? `사람${id + 1}` : names[id]);
 
 	const copy = async (kind, text) => {
-		try {
-			await navigator.clipboard.writeText(text);
+		/* HTTPS 아니어도(http 커스텀 도메인) 되도록 execCommand 폴백 포함 */
+		if (await copyText(text)) {
 			setCopiedKind(kind);
 			setCopyFailed(false);
 			setTimeout(() => setCopiedKind((k) => (k === kind ? null : k)), 1500);
 		}
-		catch {
-			/* clipboard 권한이 없으면 직접 복사하도록 안내한다 */
+		else {
 			setCopyFailed(true);
 		}
 	};

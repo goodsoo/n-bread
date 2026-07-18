@@ -24,6 +24,45 @@ export function formatResultText(names, flows) {
 	return ['[N빵 정산]', ...lines].join('\n');
 }
 
+/**
+ * 클립보드 복사 — 보안 컨텍스트(HTTPS·localhost)면 Clipboard API 를,
+ * 아니면(예: HTTP 로 열린 커스텀 도메인) execCommand 로 폴백한다.
+ *
+ * navigator.clipboard 는 보안 컨텍스트에서만 존재해서, HTTPS 인증서가 아직
+ * 안 붙은 http:// 로 열면 링크·텍스트 복사가 조용히 실패했다. 폴백을 둬서
+ * 어느 환경에서든 복사되게 한다.
+ *
+ * @param {string} text
+ * @returns {Promise<boolean>} 복사 성공 여부
+ */
+export async function copyText(text) {
+	try {
+		if (navigator.clipboard && window.isSecureContext) {
+			await navigator.clipboard.writeText(text);
+			return true;
+		}
+	}
+	catch {
+		/* 권한 거부 등 — 아래 execCommand 폴백을 시도한다 */
+	}
+	try {
+		const ta = document.createElement('textarea');
+		ta.value = text;
+		ta.setAttribute('readonly', '');
+		ta.style.position = 'fixed';
+		ta.style.top = '-9999px';
+		document.body.appendChild(ta);
+		ta.select();
+		ta.setSelectionRange(0, text.length);
+		const ok = document.execCommand('copy');
+		document.body.removeChild(ta);
+		return ok;
+	}
+	catch {
+		return false;
+	}
+}
+
 /* 같은 브라우저 세션(새로고침)과 새 방문을 구분한다.
    새로고침이면 draft 를 조용히 복원하고, 새 방문이면 배너로 제안만 한다. */
 export function isSessionActive() {
